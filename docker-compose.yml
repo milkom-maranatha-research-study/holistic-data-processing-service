@@ -97,6 +97,20 @@ services:
     networks:
       - dpsnetwork
 
+  dps:
+    build: ./data-processing-service
+    container_name: dps
+    depends_on:
+      - resourcemanager
+      - namenode
+      - datanode1
+      - datanode2
+      - nodemanager1
+    env_file:
+      - ./hadoop.env
+    networks:
+      - dpsnetwork
+
 volumes:
   hadoop_namenode:
   hadoop_datanode1:
