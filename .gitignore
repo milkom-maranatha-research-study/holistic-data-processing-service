@@ -26,3 +26,8 @@ data/
 *.venv*
 
 .DS_Store
+
+# Eclipse DPS Project settings
+*/holistic-dps/.settings
+*/holistic-dps/dps/.settings
+*/holistic-dps/gradle/*
