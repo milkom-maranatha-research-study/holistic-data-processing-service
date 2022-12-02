@@ -3,6 +3,23 @@ FROM bde2020/hadoop-base:2.0.0-hadoop3.2.1-java8
 # Install netcat to check connection of the dependency services
 RUN apt-get update && apt-get install -y netcat
 
+# Install python
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3
+
+ENV PYTHONUNBUFFERED 1
+
+# Set working directory
+WORKDIR /data-processing-service
+
+# Add source code to the working directory
+ADD . /data-processing-service
+
+# Install all requirements 
+RUN pip install -r requirements.txt
+
+# Set Python PATH
+ENV PYTHONPATH "${PYTHONPATH}:/data-processing-service/data_cleaner/"
+
 # TODO:
 # 1. Generate `DataProcessingService.jar` (Including it's Jars' dependencies?)
 # 2. Create folder structure to allocate input files in HDFS: `hdfs dfs -mkdir -p /user/root`
