@@ -15,7 +15,7 @@ function ping_service {
 }
 
 
-function run_dps_service {
+function run_data_aggregator {
     echo "Waiting for 'namenode' to be ready..."
     ping_service "namenode" "9870" "60"
 
@@ -28,7 +28,7 @@ function run_dps_service {
     echo "Waiting for 'resourcemanager' to be ready..."
     ping_service "resourcemanager" "8088" "60"
 
-    echo "Starting to run 'dps' service..."
+    echo "Starting to run 'data_aggregator' service..."
     # $HADOOP_HOME/bin/hadoop jar $JAR_FILEPATH $CLASS_TO_RUN $PARAMS
 
     # TODO: Remove while-loop once DPS Jar is ready!
@@ -38,5 +38,19 @@ function run_dps_service {
 }
 
 
+function run_data_cleaner {
+    RUN_LOCALLY="$1"
+
+    if [[ $RUN_LOCALLY =~ ^(locally)$ ]]; then
+        . .env
+
+        export PYTHONPATH="$PWD/data_cleaner"
+    fi
+
+    python data_cleaner/main.py
+}
+
+
 # Main
-run_dps_service
+run_data_cleaner
+# run_data_aggregator
