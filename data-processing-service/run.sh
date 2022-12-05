@@ -39,17 +39,17 @@ function run_data_aggregator {
 }
 
 
-function run_data_cleaner {
+function run_data_processor {
     if [[ $RUN_LOCALLY =~ ^(locally)$ ]]; then
         . .env
 
-        export PYTHONPATH="$PWD/data_cleaner"
+        export PYTHONPATH="$PWD/data_processor"
     fi
 
-    python data_cleaner/main.py
+    python data_processor/main.py
 }
 
 
 # Main
-run_data_cleaner
+run_data_processor
 # run_data_aggregator
