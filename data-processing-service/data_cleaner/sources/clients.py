@@ -136,7 +136,7 @@ class BackendAPIClient:
 
     def _download(self, download_as, path, payload=None, headers=None) -> None:
 
-        url = self._METABASE_URL_API + path
+        url = settings.BACKEND_URL + path
         req_headers = {
             "Accept": "*/*",
             "Authorization": f"Token {self._ACCESS_TOKEN}" if hasattr(self, '_ACCESS_TOKEN') else None
