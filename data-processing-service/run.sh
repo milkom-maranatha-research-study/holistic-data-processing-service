@@ -1,5 +1,6 @@
 #!/bin/bash
 
+RUN_LOCALLY="$1"
 
 function ping_service {
     HOST=$1
@@ -39,8 +40,6 @@ function run_data_aggregator {
 
 
 function run_data_cleaner {
-    RUN_LOCALLY="$1"
-
     if [[ $RUN_LOCALLY =~ ^(locally)$ ]]; then
         . .env
 
