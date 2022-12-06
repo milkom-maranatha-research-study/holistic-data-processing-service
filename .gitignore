@@ -162,5 +162,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Backend App
+# data-processing-service
 *.tmp
+*/tmp/input
