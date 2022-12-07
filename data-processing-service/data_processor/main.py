@@ -14,9 +14,9 @@ class TherapistInteractionProcessor:
     def __init__(self) -> None:
         self.backend_therapist_interaction = TherapistInteractionBackendOperation()
 
-        self.process_data()
+        self._process_data()
 
-    def process_data(self) -> None:
+    def _process_data(self) -> None:
         """
         Process therapists's interaction data from Backend and export it into multiple CSV files.
         """
