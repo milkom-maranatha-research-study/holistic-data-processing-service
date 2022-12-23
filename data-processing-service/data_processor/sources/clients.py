@@ -158,7 +158,28 @@ class BackendAPIClient:
                     file.write(chunk)
 
 
-class TherapistInteractionAPI(BackendAPIClient):
+class TherapistAPI(BackendAPIClient):
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._BE_THERAPISTS_FILE = '.be_therapists.csv.tmp'
+
+    def download_data(self, format='csv') -> None:
+        """
+        Downloads Therapist data from Backend in CSV format.
+        """
+        if format not in ['json', 'csv']:
+            raise ValueError(f'{format} is invalid format.')
+
+        path = '/organizations/therapists/export/'
+        payload = {'format': format}
+
+        self._download(self._BE_THERAPISTS_FILE, path=path, payload=payload)
+
+
+
+class InteractionAPI(BackendAPIClient):
 
     def __init__(self) -> None:
         super().__init__()
@@ -167,12 +188,12 @@ class TherapistInteractionAPI(BackendAPIClient):
 
     def download_data(self, format='csv') -> None:
         """
-        Downloads Therapist Interaction data from Metabase in CSV format.
+        Downloads Therapist Interaction data from Backend in CSV format.
         """
         if format not in ['json', 'csv']:
             raise ValueError(f'{format} is invalid format.')
 
-        path = '/organizations/therapists-interactions/export/'
+        path = '/organizations/therapists/interactions/export/'
         payload = {'format': format}
 
         self._download(self._BE_THER_INTERACTIONS_FILE, path=path, payload=payload)
