@@ -34,7 +34,7 @@ class TherapistBackendOperation:
         Otherwise, we load the temporary CSV file from disk.
         """
 
-        logger.info("Collecting data from Backend or importing from disk...")
+        logger.info("Collecting Therapist data from Backend or importing from disk...")
 
         if not settings.DEV_MODE:
             self.api.download_data(format='csv')
@@ -75,7 +75,7 @@ class InteractionBackendOperation:
         Otherwise, we load the temporary CSV file from disk.
         """
 
-        logger.info("Collecting data from Backend or importing from disk...")
+        logger.info("Collecting Interaction data from Backend or importing from disk...")
 
         if not settings.DEV_MODE:
             self.api.download_data(format='csv')
