@@ -1,5 +1,8 @@
+import csv
 import logging
 import os
+
+from dask import dataframe as dask_dataframe
 
 from settings import configure_logging
 from sources.operations import (
@@ -12,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class TherapistProcessor:
-    INPUT_PATH = 'tmp/input'
+    INPUT_PATH = 'input/num_of_thers'
 
     def __init__(self) -> None:
         self.therapist_operation = TherapistBackendOperation()
@@ -21,8 +24,8 @@ class TherapistProcessor:
 
     def _process_data(self) -> None:
         """
-        Process therapists data from Backend and writes the total therapists
-        in NiceDay to a file.
+        Process therapists data from Backend
+        and writes the total therapists into multiple CSV files.
         """
 
         # Step 1 - Collect Data
@@ -37,33 +40,47 @@ class TherapistProcessor:
         cleaned_dataframe = dataframe.dropna(subset=['organization_id'])
 
         # Step 3 - Count Data
-        # * We need to count the overall number of therapist in NiceDay
-        # * as an input for the data aggregator.
-        size = cleaned_dataframe['id'].compute().size
+        # * 3.1 Count all of therapist in NiceDay.
+        num_all_therapist = cleaned_dataframe['id'].count().compute()
 
-        # Step 4 - Writes result
-        # * 4.1 Write total therapists in NiceDay
+        # * 3.2 Count the number of therapist per Organization.
+        grouped_dataframe = cleaned_dataframe.groupby(['organization_id'])['id'].count()\
+            .compute().reset_index(name='total_thers')
+
+        # Step 4 - Save results into CSV files
+        self._to_csv(num_all_therapist, grouped_dataframe)
+
+    def _to_csv(
+        self,
+        num_all_therapist: int,
+        grouped_dataframe: dask_dataframe
+    ) -> None:
+        """
+        Saves that `num_all_therapist` and `grouped_dataframe` into CSV files.
+        """
         is_exists = os.path.exists(self.INPUT_PATH)
 
         if not is_exists:
             os.makedirs(self.INPUT_PATH)
 
+        # Write total therapists in NiceDay
+        header = ['total_thers']
+        data = [num_all_therapist]
+
         with open(f'{self.INPUT_PATH}/number-of-therapist.csv', 'w') as file:
-            file.write(f'{size}')
+            writer = csv.writer(file)
+            writer.writerow(header)
+            writer.writerow(data)
 
-        # * 4.2 Write total therapists per Organization
-        grouped_dataframe = cleaned_dataframe.groupby(['organization_id'])['id'].count()\
-            .compute().reset_index(name='total_thers')
-
+        # Write total therapists per Organization
         grouped_dataframe.to_csv(
             f'{self.INPUT_PATH}/number-of-therapist-per-org.csv',
-            header=False,
             index=False
         )
 
 
-class TherapistInteractionProcessor:
-    INPUT_PATH = 'tmp/input'
+class InteractionProcessor:
+    INPUT_PATH = 'input/interaction'
 
     def __init__(self) -> None:
         self.ther_interaction_operation = InteractionBackendOperation()
@@ -107,23 +124,25 @@ class TherapistInteractionProcessor:
         # * in the same day, we only need to pick one.
         # 
         # * It's sufficient (for now) to tells that therapist is active on that day.
-        dataframe = dataframe.drop_duplicates(
+        cleaned_dataframe = dataframe.drop_duplicates(
             subset=['therapist_id', 'interaction_date'],
             keep='last'
         )
 
-        # Step 4 - Executes every task from the previous steps.
-        cleaned_dataframe = dataframe.compute()
+        # Step 4 - Save results into CSV files
+        self._to_csv(cleaned_dataframe)
 
-        # Step 5 - Export results into multiple CSV file!
+    def _to_csv(self, interaction_dataframe: dask_dataframe) -> None:
+        """
+        Saves that `interaction_dataframe` into CSV files.
+        """
         is_exists = os.path.exists(self.INPUT_PATH)
 
         if not is_exists:
             os.makedirs(self.INPUT_PATH)
 
-        cleaned_dataframe.to_csv(
+        interaction_dataframe.compute().to_csv(
             f'{self.INPUT_PATH}/thers-interactions.csv',
-            header=False,
             index=False
         )
 
@@ -132,4 +151,4 @@ if __name__ == '__main__':
     configure_logging()
 
     TherapistProcessor()
-    TherapistInteractionProcessor()
+    InteractionProcessor()
