@@ -4,11 +4,9 @@ import os
 
 from dask import dataframe as dask_dataframe
 from datetime import datetime
-from typing import List, Tuple
 
 from helpers import print_time_duration
 from settings import configure_logging
-from sources.dateutils import DateUtil
 from sources.operations import (
     InteractionBackendOperation,
     TherapistBackendOperation
@@ -24,6 +22,7 @@ class TherapistDataProcessor:
     def __init__(self) -> None:
         self.therapist_operation = TherapistBackendOperation()
 
+        # Runs data processor
         process_start_at = datetime.now()
 
         self._process_data()
@@ -100,8 +99,8 @@ class InteractionDataProcessor:
 
     def __init__(self) -> None:
         self.ther_interaction_operation = InteractionBackendOperation()
-        self.date_util = DateUtil()
 
+        # Runs data processor
         process_start_at = datetime.now()
 
         self._process_data()
@@ -159,103 +158,58 @@ class InteractionDataProcessor:
         if not is_exists:
             os.makedirs(self.INPUT_PATH)
 
-        logger.info("Generating available time periods from the data...")
-        start_date, end_date = self._get_interaction_period(cleaned_dataframe)
-
         logger.info("Save Interaction data in weekly period into CSV files...")
-        self._to_csv(start_date, end_date, 'weekly', cleaned_dataframe)
+        self._to_csv(cleaned_dataframe, 'W', 'weekly')
 
         logger.info("Save Interaction data in monthly period into CSV files...")
-        self._to_csv(start_date, end_date, 'monthly', cleaned_dataframe)
+        self._to_csv(cleaned_dataframe, 'M', 'monthly')
 
         logger.info("Save Interaction data in yearly period into CSV files...")
-        self._to_csv(start_date, end_date, 'yearly', cleaned_dataframe)
+        self._to_csv(cleaned_dataframe, 'Y', 'yearly')
 
     def _to_csv(
         self,
-        start_date: datetime,
-        end_date: datetime,
-        period_type: str,
-        dataframe: dask_dataframe
+        dataframe: dask_dataframe,
+        period_key: str,
+        period_value: str
     ) -> None:
         """
         Slices and saves that `dataframe` into multiple CSV files in a specific `period_type`,
         starting from that given `start_date` until the given `end_date`.
-        """
 
-        if period_type not in ['weekly', 'monthly', 'yearly']:
+        Accepted `period_type`:
+        - 'W' : Abbreviation for weekly period
+        - 'M' : Abbreviation for montly period
+        - 'Y' : Abbreviation for yearly period
+        """
+        period_key = period_key.upper()
+
+        if period_key not in ['W', 'M', 'Y']:
             raise ValueError("'period_type' is invalid.")
 
         # Create directory if not exists
-        path = f'{self.INPUT_PATH}/{period_type}'
+        path = f'{self.INPUT_PATH}/{period_value}'
 
         is_exists = os.path.exists(path)
 
         if not is_exists:
             os.makedirs(path)
 
-        # Slicing dataframe in a specific period.
-        periods = self._get_periods_from(start_date, end_date, period_type)
-
-        for start, end in periods:
-
-            start_str, end_str = start.strftime('%Y-%m-%d'), end.strftime('%Y-%m-%d')
-            logger.info(f"Slice {period_type} Interaction data from {start_str} to {end_str}...")
-
-            # Filters dataframe
-            sliced_dataframe = dataframe[
-                (dataframe['interaction_date'] >= start) & (dataframe['interaction_date'] <= end)
-            ]
-
-            # Assign time period into dataframe
-            sliced_dataframe = sliced_dataframe.assign(
-                period=lambda _: f"{start_str}_{end_str}"
-            ).compute()
-
-            # Save to CSV file
-            logger.info(f"Create {period_type} CSV file from {start_str} to {end_str}...")
-            sliced_dataframe.to_csv(
-                f'{path}/interactions-' + f'{start_str}_{end_str}.csv',
-                index=False
-            )
-
-    def _get_interaction_period(self, dataframe: dask_dataframe) -> List[Tuple]:
-        """
-        Returns Tuple of the start and end date of the therapist interaction
-        in that given `dataframe`.
-        """
-
-        df_min_obj, df_max_obj = dask_dataframe.compute(
-            dataframe[['interaction_date']].min(),
-            dataframe[['interaction_date']].max()
+        # Add a new column `period` in that `dataframe`.
+        # The column's value is calculated based on the row's interaction date.
+        dataframe = dataframe.assign(
+            period=lambda x: x.interaction_date.dt.to_period(period_key)
         )
 
-        start_date = df_min_obj['interaction_date'].to_pydatetime()
-        end_date = df_max_obj['interaction_date'].to_pydatetime()
+        # Reset the `dataframe` partition for 100 times.
+        dataframe = dataframe.repartition(npartitions=100)
 
-        return start_date, end_date
-
-    def _get_periods_from(
-        self, 
-        start_date: datetime,
-        end_date: datetime,
-        period_type: str
-    ) -> List[Tuple]:
-        """
-        Returns list of date period from the given `start_date` until the `end_date`
-        with a specific `period_type`.
-        """
-
-        if period_type == 'weekly':
-            return self.date_util.get_weekly_periods(start_date, end_date)
-
-        elif period_type == 'monthly':
-            return self.date_util.get_monthly_periods(start_date, end_date)
-
-        elif period_type == 'yearly':
-            return self.date_util.get_yearly_periods(start_date, end_date)
-
-        return []
+        # Save to CSV file
+        logger.info(f"Create {period_value} CSV files...")
+        dataframe.to_csv(
+            f'{path}/interactions-*.csv',
+            index=False
+        )
 
 
 if __name__ == '__main__':
