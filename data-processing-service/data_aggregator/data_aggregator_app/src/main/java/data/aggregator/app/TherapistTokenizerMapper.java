@@ -30,7 +30,7 @@ public class TherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWrit
  
 		while (itr.hasMoreTokens()) {
 			String token = itr.nextToken();
-			
+
 			// Extracts tokens by removing comma delimiter
 			// Input is in this format "{period},{orgId},{totalThersInOrg},{therId}"
 			String[] tokens = token.split(",");
@@ -41,7 +41,7 @@ public class TherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWrit
 			if(map.containsKey(keyValue)) {
 				int totalActiveThers = map.get(keyValue).intValue() + 1;
 
-				map.put(token, totalActiveThers);
+				map.put(keyValue, totalActiveThers);
 
 				continue;
 			}
