@@ -11,6 +11,11 @@ from tracers import endpoint_tracer, response_tracer
 class BackendAPIClient:
 
     def __init__(self):
+        # When running the data processor service in a development mode,
+        # it won't require the Backend access token because we will use
+        # downloaded data data from `.csv` files.
+        if settings.DEV_MODE:
+            return
 
         self._FILE_ACCESS_TOKEN = '.backend.access_token.tmp'
         self._ACCESS_TOKEN = self._get_access_token()
