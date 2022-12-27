@@ -181,30 +181,42 @@ class InteractionDataProcessor:
             on='organization_id'
         )
 
-        # Step 5 - Save the final data into CSV files
-        # Weekly period
-        # * Generate a weekly `period` column based on the `interaction_date`.
+        # Step 5 - Generate period column
+        # * Value of the `period` column is generated based on the `interaction_date`.
+        logger.info("Generate 'period' column based on the period type and 'interaction_date'...")
         weekly_dataframe = dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('W')
         )
-
-        logger.info("Save Interaction data in weekly period into CSV files...")
-        self._to_csv(weekly_dataframe, 'weekly')
-
-        # Monthly period
-        # * Generate a monthly `period` column based on the `interaction_date`.
         monthly_dataframe = dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('M')
         )
-
-        logger.info("Save Interaction data in monthly period into CSV files...")
-        self._to_csv(monthly_dataframe, 'monthly')
-
-        # Yearly period
-        # * Generate a yearly `period` column based on the `interaction_date`.
         yearly_dataframe = dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('Y')
         )
+
+        # * Step 6 - Distinct interaction data by `therapist_id` and `period` columns.
+        # * We need this disctinction is required to remove duplicate therapists
+        # * that are active within that period.
+        logger.info("Distinct data by the 'therapist_id' and 'period' columns...")
+        weekly_dataframe = weekly_dataframe.drop_duplicates(
+            subset=['therapist_id', 'period'],
+            keep='last'
+        )
+        monthly_dataframe = monthly_dataframe.drop_duplicates(
+            subset=['therapist_id', 'period'],
+            keep='last'
+        )
+        yearly_dataframe = yearly_dataframe.drop_duplicates(
+            subset=['therapist_id', 'period'],
+            keep='last'
+        )
+
+        # * 6 - Save the final weekly dataframe into CSV files
+        logger.info("Save Interaction data in weekly period into CSV files...")
+        self._to_csv(weekly_dataframe, 'weekly')
+
+        logger.info("Save Interaction data in monthly period into CSV files...")
+        self._to_csv(monthly_dataframe, 'monthly')
 
         logger.info("Save Interaction data in yearly period into CSV files...")
         self._to_csv(yearly_dataframe, 'yearly')
