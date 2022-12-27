@@ -158,10 +158,10 @@ dmypy.json
 # Data Processing Service
 *.tmp
 # data_aggregator
-*/data_aggregator/.gradle
-*/data_aggregator/.settings
-*/data_aggregator/build
-*/data_aggregator/data_aggregator_app/.settings
-*/data_aggregator/data_aggregator_app/build
+data_aggregator/.gradle
+data_aggregator/.settings
+data_aggregator/build
+data_aggregator/data_aggregator_app/.settings
+data_aggregator/data_aggregator_app/build
 # data_processor
-data-processing-service/**/input/
+input/

@@ -12,7 +12,6 @@ ADD . /data-processing-service
 RUN pip install -r requirements.txt
 
 # Set Python PATH
-ENV PYTHONPATH "${PYTHONPATH}:/holistic-data-sync/sync/"
+ENV PYTHONPATH "${PYTHONPATH}:/data-processing-service"
 
-ADD run.sh /run.sh
-RUN chmod a+x /run.sh
+RUN chmod a+x ./run_processor.sh
