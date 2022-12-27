@@ -1,10 +1,10 @@
 #!/bin/bash
 
-PERIOD_TYPE="$1"
 
+function prepare_therapist_hadoop_requirements {
+    PERIOD_TYPE="$1"
 
-function prepare_hadoop_requirements {
-    echo "Preparing Hadoop requirements..."
+    echo "Preparing ${PERIOD_TYPE} therapists Hadoop requirements..."
 
     echo "Create folder structure to allocate input files in the 'namenode' service..."
     docker exec -it namenode bash hdfs dfs -mkdir -p /user/root
@@ -42,27 +42,31 @@ function prepare_hadoop_requirements {
 }
 
 
-function run_data_aggregator {
-    echo "Starting to run 'data_aggregator' service..."
+function run_therapist_aggregator {
+    PERIOD_TYPE="$1"
 
-    echo "Run MR Job to aggregate active/inactive therapists on ${PERIOD_TYPE} period..."
+    echo "Starting 'data_aggregator' service to calculate active/inactive therapists..."
+
+    echo "Run MR Job on ${PERIOD_TYPE} period..."
     INPUT_PATH="input/${PERIOD_TYPE}-interaction/"
     OUTPUT_PATH="output/${PERIOD_TYPE}-interaction/"
     docker exec -it namenode hadoop jar tmp/data_aggregator_app.jar data.aggregator.app.TherapistAggregatorDriver "${INPUT_PATH}" "${OUTPUT_PATH}"
 
     echo "Export MR Job outputs..."
-    docker exec -it namenode hadoop fs -getmerge "/user/root/${OUTPUT_PATH}" "${PERIOD_TYPE}-output.txt"
-    docker exec -it namenode cat "${PERIOD_TYPE}-output.txt" > "${PERIOD_TYPE}-aggregate-output.txt"
+    docker exec -it namenode hadoop fs -getmerge "/user/root/${OUTPUT_PATH}" "active-inactive-${PERIOD_TYPE}-aggregate.csv"
+    docker exec -it namenode cat "active-inactive-${PERIOD_TYPE}-aggregate.csv" > "active-inactive-${PERIOD_TYPE}-aggregate.csv"
 }
 
 
-function cleanup {
+function cleanup_therapist_aggregator {
+    PERIOD_TYPE="$1"
+
     echo "Clean up HDFS input/output..."
     docker exec -it namenode bash hdfs dfs -rm -r /user/root/input
     docker exec -it namenode bash hdfs dfs -rm -r /user/root/output
 
     echo "Clean up 'namenode' output file..."
-    docker exec -it namenode rm -f "${PERIOD_TYPE}-output.txt"
+    docker exec -it namenode rm -f "active-inactive-${PERIOD_TYPE}-aggregate.csv"
 
     echo "Clean up 'tmp' files..."
     TMP_INPUT_PATH="/tmp/${PERIOD_TYPE}-interaction"
@@ -71,7 +75,23 @@ function cleanup {
 }
 
 
+function therapist_aggregator_main {
+    echo "MR Job - Weekly Aggregate..."
+    prepare_therapist_hadoop_requirements "weekly"
+    run_therapist_aggregator "weekly"
+    cleanup_therapist_aggregator "weekly"
+
+    echo "MR Job - Monthly Aggregate..."
+    prepare_therapist_hadoop_requirements "monthly"
+    run_therapist_aggregator "monthly"
+    cleanup_therapist_aggregator "monthly"
+
+    echo "MR Job - Yearly Aggregate..."
+    prepare_therapist_hadoop_requirements "yearly"
+    run_therapist_aggregator "yearly"
+    cleanup_therapist_aggregator "yearly"
+}
+
+
 # Main
-prepare_hadoop_requirements
-run_data_aggregator
-cleanup
+therapist_aggregator_main

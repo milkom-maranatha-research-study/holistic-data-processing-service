@@ -10,7 +10,6 @@ function run_data_processor {
         export PYTHONPATH="$PWD/data_processor"
     fi
 
-    echo $PYTHONPATH
     python "$PWD/data_processor/main.py"
 }
 

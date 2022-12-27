@@ -157,7 +157,7 @@ dmypy.json
 
 # Data Processing Service
 *.tmp
-*-output.txt
+*-aggregate.csv
 # data_aggregator
 data_aggregator/.gradle
 data_aggregator/.settings
