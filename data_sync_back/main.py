@@ -32,6 +32,7 @@ class SyncBackNumOfTherapist:
         """
         self.num_of_therapist_operation.sync_back_weekly_data()
         self.num_of_therapist_operation.sync_back_monthly_data()
+        self.num_of_therapist_operation.sync_back_yearly_data()
 
 
 if __name__ == '__main__':
