@@ -43,6 +43,17 @@ class NumOfTherapistBackendOperation:
         for org_id, num_of_thers in num_of_thers_map.items():
             self.api.upsert(org_id, num_of_thers)
 
+    def sync_back_yearly_data(self) -> None:
+        """
+        Synchronize yearly active/inactive therapists in the Organization
+        back to the Backend service.
+        """
+
+        num_of_thers_map = self._get_yearly_therapists_map()
+
+        for org_id, num_of_thers in num_of_thers_map.items():
+            self.api.upsert(org_id, num_of_thers)
+
     def _get_weekly_therapists_map(self) -> Dict:
         """
         Returns map of active/inactive therapists per Organization.
@@ -74,3 +85,19 @@ class NumOfTherapistBackendOperation:
 
         logger.info("Converting number of therapist monthly objects into a dictionary...")
         return self.mapper.to_monthly_therapists_map(dataframe)
+
+    def _get_yearly_therapists_map(self) -> Dict:
+        """
+        Returns map of active/inactive therapists per Organization.
+        """
+
+        logger.info("Importing active/inactive therapist yearly data from disk...")
+
+        dataframe = pd.read_csv(
+            NUM_OF_THER_YEARLY_FILENAME,
+            sep='\t',
+            header=None
+        )
+
+        logger.info("Converting number of therapist yearly objects into a dictionary...")
+        return self.mapper.to_yearly_therapists_map(dataframe)
