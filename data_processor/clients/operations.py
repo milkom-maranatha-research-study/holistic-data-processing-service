@@ -3,7 +3,7 @@ import settings
 
 from dask import dataframe as dask_dataframe
 
-from sources.clients import InteractionAPI, TherapistAPI
+from clients.api import InteractionAPI, TherapistAPI
 
 
 logger = logging.getLogger(__name__)
