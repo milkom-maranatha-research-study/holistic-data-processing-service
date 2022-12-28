@@ -53,8 +53,13 @@ function run_therapist_aggregator {
     docker exec -it namenode hadoop jar tmp/data_aggregator_app.jar data.aggregator.app.TherapistAggregatorDriver "${INPUT_PATH}" "${OUTPUT_PATH}"
 
     echo "Export MR Job outputs..."
+
+    # Create 'output' directory if it doesn't exists
+    OUTPUT_ACTIVE_INACTIVE_AGGREGATE_PATH="output/active-inactive"
+    mkdir -p "${OUTPUT_ACTIVE_INACTIVE_AGGREGATE_PATH}"
+
     docker exec -it namenode hadoop fs -getmerge "/user/root/${OUTPUT_PATH}" "active-inactive-${PERIOD_TYPE}-aggregate.csv"
-    docker exec -it namenode cat "active-inactive-${PERIOD_TYPE}-aggregate.csv" > "active-inactive-${PERIOD_TYPE}-aggregate.csv"
+    docker exec -it namenode cat "active-inactive-${PERIOD_TYPE}-aggregate.csv" > "${OUTPUT_ACTIVE_INACTIVE_AGGREGATE_PATH}/${PERIOD_TYPE}-aggregate.csv"
 }
 
 
