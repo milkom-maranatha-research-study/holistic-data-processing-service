@@ -4,6 +4,7 @@ import os
 
 from dask import dataframe as dask_dataframe
 from datetime import datetime
+from typing import Tuple
 
 from helpers import print_time_duration
 from settings import configure_logging
@@ -39,7 +40,7 @@ class TherapistDataProcessor:
 
     def _process_data(self) -> None:
         """
-        Process therapists data from Backend
+        Process Therapist data from Backend
         and writes the total therapists into multiple CSV files.
         """
 
@@ -58,6 +59,12 @@ class TherapistDataProcessor:
         logger.info("Count all therapist in NiceDay...")
         # Step 3 - Count Data
         # * 3.1 Count all of therapist in NiceDay.
+        df_min_obj, df_max_obj = dask_dataframe.compute(
+            cleaned_dataframe[['date_joined']].min(),
+            cleaned_dataframe[['date_joined']].max()
+        )
+        min_date = df_min_obj['date_joined'].to_pydatetime()
+        max_date = df_max_obj['date_joined'].to_pydatetime()
         num_all_therapist = cleaned_dataframe['id'].count().compute()
 
         logger.info("Count total therapists per Organization...")
@@ -66,15 +73,18 @@ class TherapistDataProcessor:
             .compute().reset_index(name='total_thers_in_org')
 
         # Step 4 - Save results into CSV files
-        self._to_csv(num_all_therapist, grouped_dataframe)
+        self._to_csv(
+            ((min_date, max_date), num_all_therapist),
+            grouped_dataframe
+        )
 
     def _to_csv(
         self,
-        num_all_therapist: int,
+        tuple_all_time_ther: Tuple[Tuple[datetime], int],
         grouped_dataframe: dask_dataframe
     ) -> None:
         """
-        Saves that `num_all_therapist` and `grouped_dataframe` into CSV files.
+        Saves that `tuple_all_thers` and `grouped_dataframe` into CSV files.
         """
         is_exists = os.path.exists(NUM_OF_THERS_INPUT_PATH)
 
@@ -84,8 +94,13 @@ class TherapistDataProcessor:
         # Write total therapists in NiceDay
         logger.info("Save total therapists in NiceDay into CSV file...")
 
-        header = ['total_thers']
-        data = [num_all_therapist]
+        period, total_thers = tuple_all_time_ther
+        period_start, period_end = period
+        str_period_start = period_start.strftime('%Y-%m-%d')
+        str_period_end = period_end.strftime('%Y-%m-%d')
+
+        header = ['period', 'total_thers']
+        data = [f'{str_period_start}/{str_period_end}', total_thers]
 
         with open(f'{NUM_OF_THERS_INPUT_PATH}/{NUM_OF_THERS_FILENAME}.csv', 'w') as file:
             writer = csv.writer(file)
@@ -117,12 +132,12 @@ class InteractionDataProcessor:
 
     def _process_data(self) -> None:
         """
-        Process therapists' interactions from Backend
+        Process Interaction data from Backend
         and writes it into multiple CSV files.
         """
 
         # Step 1 - Data Collection
-        # * Get therapists' interactions from the Backend.
+        # * Get Interaction data from the Backend.
         self.ther_interaction_operation.collect_data()
         dataframe = self.ther_interaction_operation.data
 
@@ -160,7 +175,7 @@ class InteractionDataProcessor:
             keep='last'
         )
 
-        # Step 4 - Merge interaction data with the therapist data
+        # Step 4 - Merge Interaction data with the therapist data
         # * We need to merge interaction dataframe with the therapist dataframe
         # * to generate a new column called `total_therapists_in_org`.
         # *

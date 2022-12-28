@@ -177,7 +177,7 @@ class TherapistAPI(BackendAPIClient):
         if format not in ['json', 'csv']:
             raise ValueError(f'{format} is invalid format.')
 
-        path = '/organizations/therapists/export/'
+        path = '/therapists/export/'
         payload = {'format': format}
 
         self._download(self._BE_THERAPISTS_FILE, path=path, payload=payload)
@@ -193,12 +193,12 @@ class InteractionAPI(BackendAPIClient):
 
     def download_data(self, format='csv') -> None:
         """
-        Downloads Therapist Interaction data from Backend in CSV format.
+        Downloads Interaction data from Backend in CSV format.
         """
         if format not in ['json', 'csv']:
             raise ValueError(f'{format} is invalid format.')
 
-        path = '/organizations/therapists/interactions/export/'
+        path = '/interactions/export/'
         payload = {'format': format}
 
         self._download(self._BE_THER_INTERACTIONS_FILE, path=path, payload=payload)

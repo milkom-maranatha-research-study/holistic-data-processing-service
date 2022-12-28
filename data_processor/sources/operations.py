@@ -17,7 +17,7 @@ class TherapistBackendOperation:
     @property
     def data(self) -> dask_dataframe:
         """
-        Returns the Therapist Interaction dask's dataframe.
+        Returns the Therapist dask's dataframe.
         """
 
         assert hasattr(self, '_ddf'), (
@@ -58,7 +58,7 @@ class InteractionBackendOperation:
     @property
     def data(self) -> dask_dataframe:
         """
-        Returns the Therapist Interaction dask's dataframe.
+        Returns the Interaction dask's dataframe.
         """
 
         assert hasattr(self, '_ddf'), (
