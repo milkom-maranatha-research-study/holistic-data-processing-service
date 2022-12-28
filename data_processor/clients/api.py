@@ -220,7 +220,7 @@ class AllTimeNumOfTherapistAPI(BackendAPIClient):
         """
 
         method = 'POST'
-        path = f'/number-of-therapists/all-time/'
+        path = '/number-of-therapists/all-time/'
 
         response = self._api_request(method, path, num_of_therapist)
 

@@ -16,9 +16,11 @@ from clients.mappers import NumOfTherapistMapper
 logger = logging.getLogger(__name__)
 
 
-NUM_OF_THER_WEEKLY_FILENAME = 'active-inactive-weekly-aggregate.csv'
-NUM_OF_THER_MONTHLY_FILENAME = 'active-inactive-monthly-aggregate.csv'
-NUM_OF_THER_YEARLY_FILENAME = 'active-inactive-yearly-aggregate.csv'
+OUTPUT_ACTIVE_INACTIVE_DIRECTORY = 'output/active-inactive'
+
+WEEKLY_AGGREGATE_FILENAME = 'weekly-aggregate.csv'
+MONTHLY_AGGREGATE_FILENAME = 'monthly-aggregate.csv'
+YEARLY_AGGREGATE_FILENAME = 'yearly-aggregate.csv'
 
 
 class TherapistBackendOperation:
@@ -107,9 +109,6 @@ class InteractionBackendOperation:
         )
 
 
-
-
-
 class NumOfTherapistBackendOperation:
 
     def __init__(self) -> None:
@@ -157,7 +156,7 @@ class NumOfTherapistBackendOperation:
         logger.info("Importing active/inactive therapist weekly data from disk...")
 
         dataframe = pd.read_csv(
-            NUM_OF_THER_WEEKLY_FILENAME,
+            f'{OUTPUT_ACTIVE_INACTIVE_DIRECTORY}/{WEEKLY_AGGREGATE_FILENAME}',
             sep='\t',
             header=None
         )
@@ -173,7 +172,7 @@ class NumOfTherapistBackendOperation:
         logger.info("Importing active/inactive therapist monthly data from disk...")
 
         dataframe = pd.read_csv(
-            NUM_OF_THER_MONTHLY_FILENAME,
+            f'{OUTPUT_ACTIVE_INACTIVE_DIRECTORY}/{MONTHLY_AGGREGATE_FILENAME}',
             sep='\t',
             header=None
         )
@@ -189,7 +188,7 @@ class NumOfTherapistBackendOperation:
         logger.info("Importing active/inactive therapist yearly data from disk...")
 
         dataframe = pd.read_csv(
-            NUM_OF_THER_YEARLY_FILENAME,
+            f'{OUTPUT_ACTIVE_INACTIVE_DIRECTORY}/{YEARLY_AGGREGATE_FILENAME}',
             sep='\t',
             header=None
         )
