@@ -30,7 +30,7 @@ def print_time_duration(tag: str, start: datetime, end: datetime):
 
     if seconds > 0:
         duration_msg += f'{seconds} second(s)'
-    
+
     if not duration_msg:
         duration_msg += f'{time_diff.microseconds / 1000000} second(s)'
 

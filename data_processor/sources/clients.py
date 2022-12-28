@@ -183,7 +183,6 @@ class TherapistAPI(BackendAPIClient):
         self._download(self._BE_THERAPISTS_FILE, path=path, payload=payload)
 
 
-
 class InteractionAPI(BackendAPIClient):
 
     def __init__(self) -> None:

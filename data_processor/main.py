@@ -164,10 +164,10 @@ class InteractionDataProcessor:
         # Step 3 - Data Distinction
         # * We need to distinct the data rows based on the therapist ID
         # * and interaction date.
-        # 
+        #
         # * We assume that if the therapist interacts with multiple clients
         # * in the same day, we only need to pick one.
-        # 
+        #
         # * It's sufficient (for now) to tells that therapist is active on that day.
         logger.info("Distinct data by interaction date...")
         dataframe = dataframe.drop_duplicates(

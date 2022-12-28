@@ -26,7 +26,7 @@ class NumOfTherapistMapper:
                 map[org_id] = existing + self._get_weekly_num_of_ther(row)
 
                 continue
-            
+
             map[org_id] = self._get_weekly_num_of_ther(row)
 
         return map
@@ -49,7 +49,7 @@ class NumOfTherapistMapper:
                 map[org_id] = existing + self._get_monthly_num_of_ther(row)
 
                 continue
-            
+
             map[org_id] = self._get_monthly_num_of_ther(row)
 
         return map
@@ -72,7 +72,7 @@ class NumOfTherapistMapper:
                 map[org_id] = existing + self._get_yearly_num_of_ther(row)
 
                 continue
-            
+
             map[org_id] = self._get_yearly_num_of_ther(row)
 
         return map

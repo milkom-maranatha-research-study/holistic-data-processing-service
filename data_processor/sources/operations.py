@@ -13,7 +13,7 @@ class TherapistBackendOperation:
 
     def __init__(self) -> None:
         self.api = TherapistAPI()
-    
+
     @property
     def data(self) -> dask_dataframe:
         """
@@ -54,7 +54,7 @@ class InteractionBackendOperation:
 
     def __init__(self) -> None:
         self.api = InteractionAPI()
-    
+
     @property
     def data(self) -> dask_dataframe:
         """
