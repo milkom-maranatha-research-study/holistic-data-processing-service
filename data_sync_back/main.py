@@ -31,6 +31,7 @@ class SyncBackNumOfTherapist:
         back to the Backend service.
         """
         self.num_of_therapist_operation.sync_back_weekly_data()
+        self.num_of_therapist_operation.sync_back_monthly_data()
 
 
 if __name__ == '__main__':
