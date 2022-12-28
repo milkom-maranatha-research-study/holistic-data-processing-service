@@ -11,7 +11,8 @@ services:
       - .env
     networks:
       - holistic-net
-    command: ./run_processor.sh locally
+    command:
+      - ./run_processor.sh
 
 networks:
   # Use the network bridge so that our containers can talk to each other.

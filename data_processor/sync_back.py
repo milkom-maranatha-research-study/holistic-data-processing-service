@@ -4,7 +4,7 @@ from datetime import datetime
 
 from helpers import print_time_duration
 from settings import configure_logging
-from targets.operations import (
+from clients.operations import (
     NumOfTherapistBackendOperation,
 )
 

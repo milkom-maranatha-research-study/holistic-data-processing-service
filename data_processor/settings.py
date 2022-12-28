@@ -2,7 +2,7 @@ import os
 import logging
 
 
-DEV_MODE = os.environ.get('DEV_MODE', True)
+DEV_MODE = os.environ.get('DEV_MODE', False)
 DEBUG_MODE = os.environ.get('DEBUG_MODE', True)
 
 # Holistic Backend API

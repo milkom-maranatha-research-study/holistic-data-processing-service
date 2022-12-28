@@ -3,7 +3,7 @@ import settings
 
 from os.path import exists
 from requests.exceptions import HTTPError
-from typing import Union
+from typing import Dict, List, Union
 
 from tracers import endpoint_tracer, response_tracer
 
@@ -11,12 +11,6 @@ from tracers import endpoint_tracer, response_tracer
 class BackendAPIClient:
 
     def __init__(self):
-        # When running the data processor service in a development mode,
-        # it won't require the Backend access token because we will use
-        # downloaded data data from `.csv` files.
-        if settings.DEV_MODE:
-            return
-
         self._FILE_ACCESS_TOKEN = '.backend.access_token.tmp'
         self._ACCESS_TOKEN = self._get_access_token()
 
@@ -201,3 +195,33 @@ class InteractionAPI(BackendAPIClient):
         payload = {'format': format}
 
         self._download(self._BE_THER_INTERACTIONS_FILE, path=path, payload=payload)
+
+
+class NumOfTherapistAPI(BackendAPIClient):
+
+    def upsert(self, org_id: str, num_of_therapists: List[Dict]) -> Dict:
+        """
+        Create or update number of therapists belonging to the Organization ID.
+        """
+
+        method = 'POST'
+        path = f'/organizations/{org_id}/number-of-therapists/'
+
+        response = self._api_request(method, path, num_of_therapists)
+
+        return response.json()
+
+
+class AllTimeNumOfTherapistAPI(BackendAPIClient):
+
+    def upsert(self, num_of_therapist: Dict) -> Dict:
+        """
+        Create or update all-time number of therapists.
+        """
+
+        method = 'POST'
+        path = f'/number-of-therapists/all-time/'
+
+        response = self._api_request(method, path, num_of_therapist)
+
+        return response.json()
