@@ -165,8 +165,23 @@ class NumOfTherapistAPI(BackendAPIClient):
         """
 
         method = 'POST'
-        path = f'/presentation/organizations/{org_id}/number-of-therapists/'
+        path = f'/organizations/{org_id}/number-of-therapists/'
 
         response = self._api_request(method, path, num_of_therapists)
+
+        return response.json()
+
+
+class AllTimeNumOfTherapistAPI(BackendAPIClient):
+
+    def upsert(self, num_of_therapist: Dict) -> Dict:
+        """
+        Create or update all-time number of therapists.
+        """
+
+        method = 'POST'
+        path = f'/number-of-therapists/all-time/'
+
+        response = self._api_request(method, path, num_of_therapist)
 
         return response.json()
