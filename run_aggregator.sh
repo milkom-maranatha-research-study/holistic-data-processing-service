@@ -13,7 +13,10 @@ function prepare_therapist_hadoop_requirements {
     docker cp data_aggregator_app.jar namenode:/tmp
 
     echo "Copy ${PERIOD_TYPE} input files into the 'tmp' dir in the 'namenode' service..."
-    if [[ $PERIOD_TYPE =~ ^(weekly)$ ]]; then
+    if [[ $PERIOD_TYPE =~ ^(alltime)$ ]]; then
+        docker cp input/interaction/alltime namenode:/tmp/alltime-interaction/
+
+    elif [[ $PERIOD_TYPE =~ ^(weekly)$ ]]; then
         docker cp input/interaction/weekly namenode:/tmp/weekly-interaction/
 
     elif [[ $PERIOD_TYPE =~ ^(monthly)$ ]]; then
@@ -30,7 +33,10 @@ function prepare_therapist_hadoop_requirements {
     docker exec -it namenode bash hdfs dfs -mkdir /user/root/input
 
     echo "Copy 'tmp/input-${PERIOD_TYPE}-interaction/' files to the HDFS input dir..."
-    if [[ $PERIOD_TYPE =~ ^(weekly)$ ]]; then
+    if [[ $PERIOD_TYPE =~ ^(alltime)$ ]]; then
+        docker exec -it namenode bash hdfs dfs -put tmp/alltime-interaction /user/root/input
+
+    elif [[ $PERIOD_TYPE =~ ^(weekly)$ ]]; then
         docker exec -it namenode bash hdfs dfs -put tmp/weekly-interaction /user/root/input
 
     elif [[ $PERIOD_TYPE =~ ^(monthly)$ ]]; then
@@ -50,7 +56,7 @@ function run_therapist_aggregator {
     echo "Run MR Job on ${PERIOD_TYPE} period..."
     INPUT_PATH="input/${PERIOD_TYPE}-interaction/"
     OUTPUT_PATH="output/${PERIOD_TYPE}-interaction/"
-    docker exec -it namenode hadoop jar tmp/data_aggregator_app.jar data.aggregator.app.TherapistAggregatorDriver "${INPUT_PATH}" "${OUTPUT_PATH}"
+    docker exec -it namenode hadoop jar tmp/data_aggregator_app.jar data.aggregator.app.TherapistAggregatorDriver "${INPUT_PATH}" "${OUTPUT_PATH}" "${PERIOD_TYPE}"
 
     echo "Export MR Job outputs..."
 
@@ -81,6 +87,11 @@ function cleanup_therapist_aggregator {
 
 
 function therapist_aggregator_main {
+    echo "MR Job - All-Time Aggregate..."
+    prepare_therapist_hadoop_requirements "alltime"
+    run_therapist_aggregator "alltime"
+    cleanup_therapist_aggregator "alltime"
+
     echo "MR Job - Weekly Aggregate..."
     prepare_therapist_hadoop_requirements "weekly"
     run_therapist_aggregator "weekly"
