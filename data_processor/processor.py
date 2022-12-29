@@ -170,19 +170,38 @@ class InteractionDataProcessor:
         #
         # * It's sufficient (for now) to tells that therapist is active on that day.
         logger.info("Distinct data by interaction date...")
-        dataframe = dataframe.drop_duplicates(
+        cleaned_dataframe = dataframe.drop_duplicates(
             subset=['therapist_id', 'interaction_date'],
             keep='last'
         )
 
         # Step 4 - Merge Interaction data with the therapist data
-        # * We need to merge interaction dataframe with the therapist dataframe
-        # * to generate a new column called `total_therapists_in_org`.
+        # * 4.1 Merge all-time interaction dataframe with the all-time therapist dataframe
+        # *     to generate new columns called `all_time_period` and `all_time_thers`.
         # *
-        # * This is required by the aggregator service, so it can calculate the number
-        # * of active/inactive therapists per org in one go.
+        # *     This is required by the aggregator service, so it can calculate
+        # *     the all-time number of active/inactive therapists in NiceDay.
+        logger.info("Merge all-time interaction dataframe with the all-time therapist dataframe...")
+        all_time_therapist = dask_dataframe.read_csv(
+            f'{NUM_OF_THERS_INPUT_PATH}/{NUM_OF_THERS_FILENAME}.csv',
+            dtype={
+                'period': 'str',
+                'total_thers': 'Int64'
+            }
+        )
+        head = all_time_therapist.head()
+        all_time_dataframe = cleaned_dataframe.assign(
+            all_time_period=lambda _: head.iloc[0][0],
+            all_time_thers=lambda _: head.iloc[0][1],
+        )
+
+        # * 4.2 Merge interaction dataframe with the therapist dataframe
+        # *     to generate a new column called `total_therapists_in_org`.
+        # *
+        # *     This is required by the aggregator service, so it can calculate
+        # *     the number of active/inactive therapists per org in one go.
         logger.info("Merge interaction dataframe with the therapist dataframe...")
-        total_therapists_dataframe = dask_dataframe.read_csv(
+        num_thers_per_org_dataframe = dask_dataframe.read_csv(
             f'{NUM_OF_THERS_INPUT_PATH}/{NUM_OF_THERS_PER_ORG_FILENAME}.csv',
             dtype={
                 'organization_id': 'Int64',
@@ -190,8 +209,8 @@ class InteractionDataProcessor:
             }
         )
 
-        dataframe = dataframe.merge(
-            total_therapists_dataframe,
+        merged_dataframe = cleaned_dataframe.merge(
+            num_thers_per_org_dataframe,
             how='left',
             on='organization_id'
         )
@@ -199,13 +218,13 @@ class InteractionDataProcessor:
         # Step 5 - Generate period column
         # * Value of the `period` column is generated based on the `interaction_date`.
         logger.info("Generate 'period' column based on the period type and 'interaction_date'...")
-        weekly_dataframe = dataframe.assign(
+        weekly_dataframe = merged_dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('W')
         )
-        monthly_dataframe = dataframe.assign(
+        monthly_dataframe = merged_dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('M')
         )
-        yearly_dataframe = dataframe.assign(
+        yearly_dataframe = merged_dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('Y')
         )
 
@@ -213,6 +232,10 @@ class InteractionDataProcessor:
         # * We need this disctinction is required to remove duplicate therapists
         # * that are active within that period.
         logger.info("Distinct data by the 'therapist_id' and 'period' columns...")
+        all_time_dataframe = all_time_dataframe.drop_duplicates(
+            subset=['therapist_id', 'all_time_period'],
+            keep='last'
+        )
         weekly_dataframe = weekly_dataframe.drop_duplicates(
             subset=['therapist_id', 'period'],
             keep='last'
@@ -226,14 +249,17 @@ class InteractionDataProcessor:
             keep='last'
         )
 
-        # * 6 - Save the final weekly dataframe into CSV files
-        logger.info("Save Interaction data in weekly period into CSV files...")
+        # * 7 - Save the final weekly dataframe into CSV 
+        logger.info("Save Interaction data for all-time period into CSV files...")
+        self._to_csv(all_time_dataframe, 'alltime')
+
+        logger.info("Save Interaction data for weekly periods into CSV files...")
         self._to_csv(weekly_dataframe, 'weekly')
 
-        logger.info("Save Interaction data in monthly period into CSV files...")
+        logger.info("Save Interaction data for monthly periods into CSV files...")
         self._to_csv(monthly_dataframe, 'monthly')
 
-        logger.info("Save Interaction data in yearly period into CSV files...")
+        logger.info("Save Interaction data for yearly periods into CSV files...")
         self._to_csv(yearly_dataframe, 'yearly')
 
     def _to_csv(
@@ -258,15 +284,22 @@ class InteractionDataProcessor:
         if not is_exists:
             os.makedirs(path)
 
-        # Slice dataframe into 50 partitions
-        dataframe = dataframe.repartition(npartitions=50)
+        # Slice dataframe into 10 partitions
+        dataframe = dataframe.repartition(npartitions=10)
 
         # Save and simplifies interaction dataframe
-        dataframe[['period', 'organization_id', 'total_thers_in_org', 'therapist_id']].to_csv(
-            f'{path}/{INTERACTION_FILENAME}-part-*.csv',
-            index=False,
-            header=False
-        )
+        if period_type == 'alltime':
+            dataframe[['all_time_period', 'all_time_thers', 'therapist_id']].to_csv(
+                f'{path}/{INTERACTION_FILENAME}-part-*.csv',
+                index=False,
+                header=False
+            )
+        else:
+            dataframe[['period', 'organization_id', 'total_thers_in_org', 'therapist_id']].to_csv(
+                f'{path}/{INTERACTION_FILENAME}-part-*.csv',
+                index=False,
+                header=False
+            )
 
 
 if __name__ == '__main__':
