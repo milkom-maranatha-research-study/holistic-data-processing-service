@@ -4,8 +4,8 @@ import os
 from dask import dataframe as dask_dataframe
 from datetime import datetime
 
-from data_processor.clients.operations import TherapistBackendOperation
-from data_processor.helpers import print_time_duration
+from data_processor.src.clients.operations import TherapistBackendOperation
+from data_processor.src.helpers import print_time_duration
 from data_processor.settings import configure_logging
 
 

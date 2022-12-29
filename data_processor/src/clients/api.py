@@ -5,7 +5,7 @@ from requests.exceptions import HTTPError
 from typing import Dict, List, Union
 
 from data_processor import settings
-from data_processor.tracers import endpoint_tracer, response_tracer
+from data_processor.src.tracers import endpoint_tracer, response_tracer
 
 
 class BackendAPIClient:

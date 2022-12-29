@@ -6,13 +6,13 @@ from typing import Dict, List
 
 from data_processor import settings
 
-from data_processor.clients.api import (
+from data_processor.src.clients.api import (
     AllTimeNumOfTherapistAPI,
     InteractionAPI,
     TherapistAPI,
     NumOfTherapistAPI,
 )
-from data_processor.clients.mappers import (
+from data_processor.src.clients.mappers import (
     AllTimeNumOfTherapistMapper,
     NumOfTherapistMapper,
 )

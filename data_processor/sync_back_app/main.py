@@ -2,12 +2,12 @@ import logging
 
 from datetime import datetime
 
-from helpers import print_time_duration
-from settings import configure_logging
-from clients.operations import (
+from data_processor.src.clients.operations import (
     AllTimeNumOfTherapistBackendOperation,
     NumOfTherapistBackendOperation,
 )
+from data_processor.src.helpers import print_time_duration
+from data_processor.settings import configure_logging
 
 
 logger = logging.getLogger(__name__)

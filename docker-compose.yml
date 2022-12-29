@@ -12,7 +12,7 @@ services:
     networks:
       - holistic-net
     command:
-      - ./run_processor.sh
+      - ./run_therapist_processor.sh
 
 networks:
   # Use the network bridge so that our containers can talk to each other.

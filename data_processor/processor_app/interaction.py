@@ -1,119 +1,26 @@
-import csv
 import logging
 import os
 
 from dask import dataframe as dask_dataframe
 from datetime import datetime
-from typing import Tuple
 
-from helpers import print_time_duration
-from settings import configure_logging
-from clients.operations import (
+from data_processor.src.clients.operations import (
     InteractionBackendOperation,
     TherapistBackendOperation
 )
+from data_processor.src.helpers import print_time_duration
+from data_processor.settings import configure_logging
 
 
 logger = logging.getLogger(__name__)
 
 
-NUM_OF_THERS_INPUT_PATH = 'input/num_of_ther'
-NUM_OF_THERS_FILENAME = 'number-of-therapist'
-NUM_OF_THERS_PER_ORG_FILENAME = 'number-of-therapist-per-org'
+AGG_NUM_OF_THERS_PATH = 'output/num_of_ther'
+AGG_NUM_OF_THERS_FILENAME = 'all-aggregate'
+AGG_NUM_OF_THERS_PER_ORG_FILENAME = 'per-org-aggregate'
 
 INTERACTION_INPUT_PATH = 'input/interaction'
 INTERACTION_FILENAME = 'interaction'
-
-
-class TherapistDataProcessor:
-
-    def __init__(self) -> None:
-        self.therapist_operation = TherapistBackendOperation()
-
-        # Runs data processor
-        process_start_at = datetime.now()
-
-        self._process_data()
-
-        process_end_at = datetime.now()
-        print_time_duration("Therapist data processing", process_start_at, process_end_at)
-
-    def _process_data(self) -> None:
-        """
-        Process Therapist data from Backend
-        and writes the total therapists into multiple CSV files.
-        """
-
-        # Step 1 - Collect Data
-        # * Get therapist data from the Backend.
-        self.therapist_operation.collect_data()
-        dataframe = self.therapist_operation.data
-
-        logger.info("Cleaning data...")
-        # Step 2 - Clean Data
-        # * Delete rows that doesn't have the Organization ID
-        # * For now, we consider those rows as dirty data,
-        # * We assume every therapist must be a member of the Organization.
-        cleaned_dataframe = dataframe.dropna(subset=['organization_id'])
-
-        logger.info("Count all therapist in NiceDay...")
-        # Step 3 - Count Data
-        # * 3.1 Count all of therapist in NiceDay.
-        df_min_obj, df_max_obj = dask_dataframe.compute(
-            cleaned_dataframe[['date_joined']].min(),
-            cleaned_dataframe[['date_joined']].max()
-        )
-        min_date = df_min_obj['date_joined'].to_pydatetime()
-        max_date = df_max_obj['date_joined'].to_pydatetime()
-        num_all_therapist = cleaned_dataframe['id'].count().compute()
-
-        logger.info("Count total therapists per Organization...")
-        # * 3.2 Count the number of therapist per Organization.
-        grouped_dataframe = cleaned_dataframe.groupby(['organization_id'])['id'].count()\
-            .compute().reset_index(name='total_thers_in_org')
-
-        # Step 4 - Save results into CSV files
-        self._to_csv(
-            ((min_date, max_date), num_all_therapist),
-            grouped_dataframe
-        )
-
-    def _to_csv(
-        self,
-        tuple_all_time_ther: Tuple[Tuple[datetime], int],
-        grouped_dataframe: dask_dataframe
-    ) -> None:
-        """
-        Saves that `tuple_all_thers` and `grouped_dataframe` into CSV files.
-        """
-        is_exists = os.path.exists(NUM_OF_THERS_INPUT_PATH)
-
-        if not is_exists:
-            os.makedirs(NUM_OF_THERS_INPUT_PATH)
-
-        # Write total therapists in NiceDay
-        logger.info("Save total therapists in NiceDay into CSV file...")
-
-        period, total_thers = tuple_all_time_ther
-        period_start, period_end = period
-        str_period_start = period_start.strftime('%Y-%m-%d')
-        str_period_end = period_end.strftime('%Y-%m-%d')
-
-        header = ['period', 'total_thers']
-        data = [f'{str_period_start}/{str_period_end}', total_thers]
-
-        with open(f'{NUM_OF_THERS_INPUT_PATH}/{NUM_OF_THERS_FILENAME}.csv', 'w') as file:
-            writer = csv.writer(file)
-            writer.writerow(header)
-            writer.writerow(data)
-
-        # Write total therapists per Organization
-        logger.info("Save total therapists per Organization into CSV files...")
-
-        grouped_dataframe.to_csv(
-            f'{NUM_OF_THERS_INPUT_PATH}/{NUM_OF_THERS_PER_ORG_FILENAME}.csv',
-            index=False
-        )
 
 
 class InteractionDataProcessor:
@@ -181,33 +88,38 @@ class InteractionDataProcessor:
         # *
         # *     This is required by the aggregator service, so it can calculate
         # *     the all-time number of active/inactive therapists in NiceDay.
-        logger.info("Merge all-time interaction dataframe with the all-time therapist dataframe...")
-        all_time_therapist = dask_dataframe.read_csv(
-            f'{NUM_OF_THERS_INPUT_PATH}/{NUM_OF_THERS_FILENAME}.csv',
+        logger.info("Merge all-time interaction dataframe with the number of therapists dataframe...")
+        num_of_thers_dataframe = dask_dataframe.read_csv(
+            f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_FILENAME}.csv',
+            sep='\t',
+            names=['period', 'total_thers'],
             dtype={
                 'period': 'str',
                 'total_thers': 'Int64'
             }
         )
-        head = all_time_therapist.head()
+        head = num_of_thers_dataframe.head()
         all_time_dataframe = cleaned_dataframe.assign(
             all_time_period=lambda _: head.iloc[0][0],
             all_time_thers=lambda _: head.iloc[0][1],
         )
 
-        # * 4.2 Merge interaction dataframe with the therapist dataframe
+        # * 4.2 Merge interaction dataframe with the number of therapists per org dataframe
         # *     to generate a new column called `total_therapists_in_org`.
         # *
         # *     This is required by the aggregator service, so it can calculate
         # *     the number of active/inactive therapists per org in one go.
         logger.info("Merge interaction dataframe with the therapist dataframe...")
         num_thers_per_org_dataframe = dask_dataframe.read_csv(
-            f'{NUM_OF_THERS_INPUT_PATH}/{NUM_OF_THERS_PER_ORG_FILENAME}.csv',
+            f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_PER_ORG_FILENAME}.csv',
+            sep='\t',
+            names=['all_time_period', 'organization_id', 'total_thers_in_org'],
             dtype={
+                'all_time_period': 'str',
                 'organization_id': 'Int64',
                 'total_thers_in_org': 'Int64'
             }
-        )
+        )[['organization_id', 'total_thers_in_org']]
 
         merged_dataframe = cleaned_dataframe.merge(
             num_thers_per_org_dataframe,
@@ -305,5 +217,4 @@ class InteractionDataProcessor:
 if __name__ == '__main__':
     configure_logging()
 
-    TherapistDataProcessor()
     InteractionDataProcessor()
