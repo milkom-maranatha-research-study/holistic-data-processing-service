@@ -1,9 +1,16 @@
 #!/bin/bash
 
-# Load dot env for sync-back app
-. .env.sync_back
+TYPE="$1"
 
-# Registers data processing service module to the python path
-export PYTHONPATH="${PYTHONPATH}:${PWD}"
+if [[ $TYPE =~ ^(locally)$ ]]; then
+    # Load dot env for the sync-back app
+    . .env
+
+    # Overrides BACKEND_URL
+    export BACKEND_URL=http://localhost:8080
+
+    # Registers data processing service module to the python path
+    export PYTHONPATH="${PYTHONPATH}:${PWD}"
+fi
 
 python "$PWD/data_processor/sync_back_app/main.py"
