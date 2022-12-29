@@ -19,12 +19,12 @@ import org.apache.hadoop.util.ToolRunner;
  * Data Processing Service (DPS) main class,
  * an entry point for executing Hadoop Map-Reduce.
  */
-public class TherapistAggregatorDriver extends Configured implements Tool {
+public class ActiveTherapistAggregatorDriver extends Configured implements Tool {
 
 	@Override
 	public int run(String[] args) throws Exception {
 		Configuration config = new Configuration();
-		JobConf jobConf = new JobConf(config, TherapistAggregatorDriver.class);
+		JobConf jobConf = new JobConf(config, ActiveTherapistAggregatorDriver.class);
 
 		Path inputPath = new Path(args[0]);
     	FileInputFormat.setInputPaths(jobConf, inputPath);
@@ -42,11 +42,11 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	private Job getJob(JobConf jobConfig, boolean isAllTimeAggregate) throws IOException {
 		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Active/Inactive Therapists");
 
-		job.setMapperClass(isAllTimeAggregate ? AllTimeTherapistTokenizerMapper.class : TherapistTokenizerMapper.class);		
+		job.setMapperClass(isAllTimeAggregate ? AllActiveTherapistTokenizerMapper.class : ActiveTherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
 
-		job.setReducerClass(isAllTimeAggregate ? AllTimeTherapistSumReducer.class : TherapistSumReducer.class);
+		job.setReducerClass(isAllTimeAggregate ? AllActiveTherapistSumReducer.class : ActiveTherapistSumReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 
@@ -54,7 +54,7 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		int exitCode = ToolRunner.run(new TherapistAggregatorDriver(), args);
+		int exitCode = ToolRunner.run(new ActiveTherapistAggregatorDriver(), args);
         System.exit(exitCode);
     }
 }

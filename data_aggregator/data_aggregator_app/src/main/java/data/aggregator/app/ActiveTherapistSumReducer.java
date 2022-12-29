@@ -7,7 +7,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 /** A Reducer class that receives inputs from the Mapper class. */
-public class AllTimeTherapistSumReducer extends Reducer<Text, IntWritable, Text, Text> {
+public class ActiveTherapistSumReducer extends Reducer<Text, IntWritable, Text, Text> {
 	private Text result = new Text();
 	private Text finalKey = new Text();
 
@@ -22,16 +22,16 @@ public class AllTimeTherapistSumReducer extends Reducer<Text, IntWritable, Text,
 		
 		// Get available keys
 		String[] keys = key.toString().split(",");
-
-		// Keys are constructed from "{allTimePeriod},{allTimeThers}"
-		finalKey.set(keys[0]);
-
-		String strAllTimeThersFromKey = keys[1];
 		
-		int totalAllTimeThersInKey = Integer.parseInt(strAllTimeThersFromKey);
-		int totalAllTimeInactiveThers = totalAllTimeThersInKey - sumActiveThers;
+		// New keys are defined by "{period},{orgId},{totalThersInOrg}"
+		String strTotalTherFromKey = keys[2];
 
-		result.set(String.format("%d,%d\t%s", sumActiveThers, totalAllTimeInactiveThers, strAllTimeThersFromKey));
+		finalKey.set(String.format("%s,%s", keys[0], keys[1]));
+
+		int totalThersInKey = Integer.parseInt(strTotalTherFromKey);
+		int totalInactiveThers = totalThersInKey - sumActiveThers;
+
+		result.set(String.format("%d,%d\t%s", sumActiveThers, totalInactiveThers, strTotalTherFromKey));
 
 		context.write(finalKey, result);
 	}

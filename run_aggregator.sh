@@ -56,7 +56,7 @@ function run_therapist_aggregator {
     echo "Run MR Job on ${PERIOD_TYPE} period..."
     INPUT_PATH="input/${PERIOD_TYPE}-interaction/"
     OUTPUT_PATH="output/${PERIOD_TYPE}-interaction/"
-    docker exec -it namenode hadoop jar tmp/data_aggregator_app.jar data.aggregator.app.TherapistAggregatorDriver "${INPUT_PATH}" "${OUTPUT_PATH}" "${PERIOD_TYPE}"
+    docker exec -it namenode hadoop jar tmp/data_aggregator_app.jar data.aggregator.app.ActiveTherapistAggregatorDriver "${INPUT_PATH}" "${OUTPUT_PATH}" "${PERIOD_TYPE}"
 
     echo "Export MR Job outputs..."
 

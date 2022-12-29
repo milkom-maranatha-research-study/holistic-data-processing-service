@@ -16,7 +16,7 @@ import org.apache.hadoop.mapreduce.Mapper;
  * 
  * All incoming `text` will be calculated before we sent it to the Reducer class.
  */
-public class TherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
+public class AllActiveTherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
 
 	private static Map<String, Integer> map = new HashMap<String, Integer>();
 
@@ -32,11 +32,11 @@ public class TherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWrit
 			String token = itr.nextToken();
 
 			// Extracts tokens by removing comma delimiter
-			// Input is in this format "{period},{orgId},{totalThersInOrg},{therId}"
+			// Input is coming in with this format "{allTimePeriod},{allTimeThers},{therId}"
 			String[] tokens = token.split(",");
 
 			// Construct a new key
-			String newKey = String.format("%s,%s,%s", tokens[0], tokens[1], tokens[2]); 
+			String newKey = String.format("%s,%s", tokens[0], tokens[1]); 
 
 			if(map.containsKey(newKey)) {
 				int totalActiveThers = map.get(newKey).intValue() + 1;
