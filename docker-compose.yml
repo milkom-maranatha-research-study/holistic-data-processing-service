@@ -1,18 +1,44 @@
 version: "3"
 
 services:
-  dps:
+  therapist_processor:
     build: .
     volumes:
       - .:/data-processing-service
     tty: true
-    container_name: dps
+    container_name: therapist_processor
     env_file:
       - .env
     networks:
       - holistic-net
     command:
       - ./run_therapist_processor.sh
+
+  interaction_processor:
+    build: .
+    volumes:
+      - .:/data-processing-service
+    tty: true
+    container_name: interaction_processor
+    env_file:
+      - .env
+    networks:
+      - holistic-net
+    command:
+      - ./run_interaction_processor.sh
+
+  sync_back:
+    build: .
+    volumes:
+      - .:/data-processing-service
+    tty: true
+    container_name: sync_back
+    env_file:
+      - .env
+    networks:
+      - holistic-net
+    command:
+      - ./run_sync_back.sh
 
 networks:
   # Use the network bridge so that our containers can talk to each other.
