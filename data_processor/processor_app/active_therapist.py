@@ -341,8 +341,7 @@ class YearlyActiveTherProcessor:
         # Step 4 - Calculate active/inactive thers before period
         logger.info("Calculating active/inactive thers before period...")
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
-        from pdb import set_trace
-        set_trace()
+
         # Step 5 - Save results into CSV files
         self._to_csv(dataframe)
 

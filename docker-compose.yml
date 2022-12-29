@@ -27,6 +27,19 @@ services:
     command:
       - ./run_interaction_processor.sh
 
+  active_ther_processor:
+    build: .
+    volumes:
+      - .:/data-processing-service
+    tty: true
+    container_name: active_ther_processor
+    env_file:
+      - .env
+    networks:
+      - holistic-net
+    command:
+      - ./run_active_ther_processor.sh
+
   sync_back:
     build: .
     volumes:
