@@ -36,17 +36,17 @@ public class TherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWrit
 			String[] tokens = token.split(",");
 
 			// Construct a new key
-			String keyValue = String.format("%s,%s,%s", tokens[0], tokens[1], tokens[2]); 
+			String newKey = String.format("%s,%s,%s", tokens[0], tokens[1], tokens[2]); 
 
-			if(map.containsKey(keyValue)) {
-				int totalActiveThers = map.get(keyValue).intValue() + 1;
+			if(map.containsKey(newKey)) {
+				int totalActiveThers = map.get(newKey).intValue() + 1;
 
-				map.put(keyValue, totalActiveThers);
+				map.put(newKey, totalActiveThers);
 
 				continue;
 			}
 
-			map.put(keyValue, 1);
+			map.put(newKey, 1);
 		}
 	}
 
@@ -62,11 +62,11 @@ public class TherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWrit
 		while(iterator.hasNext()) {
 			Map.Entry<String, Integer> entry = iterator.next();
 
-			String keyValue = entry.getKey();
+			String key = entry.getKey();
 
 			int totalActiveThers = entry.getValue().intValue();
 
-			context.write(new Text(keyValue), new IntWritable(totalActiveThers));
+			context.write(new Text(key), new IntWritable(totalActiveThers));
 		}
 
 		map.clear();

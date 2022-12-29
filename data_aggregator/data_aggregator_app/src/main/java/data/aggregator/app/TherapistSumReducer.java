@@ -9,6 +9,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 /** A Reducer class that receives inputs from the Mapper class. */
 public class TherapistSumReducer extends Reducer<Text, IntWritable, Text, Text> {
 	private Text result = new Text();
+	private Text finalKey = new Text();
 
 	/** Aggregates every value belonging to the key and write it to the HDFS Context. */
 	@Override
@@ -25,11 +26,13 @@ public class TherapistSumReducer extends Reducer<Text, IntWritable, Text, Text> 
 		// Keys are constructed from "{period},{orgId},{totalThersInOrg}"
 		String strTotalTherFromKey = keys[2];
 
+		finalKey.set(String.format("%s,%s", keys[0], keys[1]));
+
 		int totalThersInKey = Integer.parseInt(strTotalTherFromKey);
 		int totalInactiveThers = totalThersInKey - sumActiveThers;
 
-		result.set(String.format("%d,%d", sumActiveThers, totalInactiveThers));
+		result.set(String.format("%d,%d\t%s", sumActiveThers, totalInactiveThers, strTotalTherFromKey));
 
-		context.write(key, result);
+		context.write(finalKey, result);
 	}
 }
