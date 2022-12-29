@@ -1,17 +1,18 @@
 import logging
 import pandas as pd
-import settings
 
 from dask import dataframe as dask_dataframe
 from typing import Dict, List
 
-from clients.api import (
+from data_processor import settings
+
+from data_processor.clients.api import (
     AllTimeNumOfTherapistAPI,
     InteractionAPI,
     TherapistAPI,
     NumOfTherapistAPI,
 )
-from clients.mappers import (
+from data_processor.clients.mappers import (
     AllTimeNumOfTherapistMapper,
     NumOfTherapistMapper,
 )
