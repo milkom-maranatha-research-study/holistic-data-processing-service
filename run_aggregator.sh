@@ -28,7 +28,12 @@ function prepare_therapist_hadoop_requirements {
 
 function run_therapist_aggregator {
     AGGREGATE_TYPE="$1"
-    echo "Starting 'data_aggregator' service to calculate total therapists in NiceDay..."
+
+    if [[ $AGGREGATE_TYPE =~ ^(all)$ ]]; then
+        echo "Starting 'data_aggregator' service to calculate number of therapists in NiceDay..."
+    elif [[ $AGGREGATE_TYPE =~ ^(per-org)$ ]]; then
+        echo "Starting 'data_aggregator' service to calculate number of therapists per Organization..."
+    fi
 
     echo "Run MR Job..."
     INPUT_PATH="input/therapist/"
