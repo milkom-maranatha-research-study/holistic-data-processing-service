@@ -24,7 +24,6 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	@Override
 	public int run(String[] args) throws Exception {
 		Configuration config = new Configuration();
-		
 		JobConf jobConf = new JobConf(config, TherapistAggregatorDriver.class);
 
 		Path inputPath = new Path(args[0]);
@@ -34,29 +33,28 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
     	FileOutputFormat.setOutputPath(jobConf, outputPath);
 		outputPath.getFileSystem(config).delete(outputPath, true);
 
-		Job job = getJob(jobConf);
+		boolean isAllTimeAggregate = "alltime".equals(args[2]);
+		Job job = getJob(jobConf, isAllTimeAggregate);
 
 		return (job.waitForCompletion(true) ? 0 : 1);
 	}
 	
-	private Job getJob(JobConf jobConfig) throws IOException {
+	private Job getJob(JobConf jobConfig, boolean isAllTimeAggregate) throws IOException {
 		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Active/Inactive Therapists");
 
-		job.setMapperClass(TherapistTokenizerMapper.class);
+		job.setMapperClass(isAllTimeAggregate ? AllTimeTherapistTokenizerMapper.class : TherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
 
-		job.setReducerClass(TherapistSumReducer.class);
+		job.setReducerClass(isAllTimeAggregate ? AllTimeTherapistSumReducer.class : TherapistSumReducer.class);
 		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
-		
+		job.setOutputValueClass(Text.class);
+
 		return job;
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		int exitCode = ToolRunner.run(new TherapistAggregatorDriver(), args);
-
-		// TODO: Get output, send it to the Backend App?
         System.exit(exitCode);
     }
 }
