@@ -249,7 +249,7 @@ class InteractionDataProcessor:
             keep='last'
         )
 
-        # * 7 - Save the final weekly dataframe into CSV 
+        # * 7 - Save the final weekly dataframe into CSV
         logger.info("Save Interaction data for all-time period into CSV files...")
         self._to_csv(all_time_dataframe, 'alltime')
 
