@@ -6,6 +6,40 @@ from pandas import DataFrame, Series
 from typing import Dict, List
 
 
+class AllTimeNumOfTherapistMapper:
+
+    def to_all_time_therapists(self, dataframe: DataFrame) -> Dict:
+        """
+        Converts that given `dataframe` into the all-time number of therapists.
+        """
+        num_of_thers = []
+
+        for _, row in dataframe.iterrows():
+            # Row[0] is defined by `{all_time_period}`
+            period_start, period_end = row[0].split('/')
+
+            # Row[1] is defined by:
+            # `{all_time_total_active_ther},{all_time_total_inactive_ther}
+            total_active_ther, total_inactive_ther = row[1].split(',')
+
+            num_of_thers += [
+                {
+                    'start_date': period_start,
+                    'end_date': period_end,
+                    'is_active': True,
+                    'value': total_active_ther
+                },
+                {
+                    'start_date': period_start,
+                    'end_date': period_end,
+                    'is_active': False,
+                    'value': total_inactive_ther
+                }
+            ]
+
+        return num_of_thers
+
+
 class NumOfTherapistMapper:
 
     def to_weekly_therapists_map(self, dataframe: DataFrame) -> Dict:
@@ -17,8 +51,8 @@ class NumOfTherapistMapper:
 
         for _, row in dataframe.iterrows():
 
-            # Row[0] is defined by `{period},{org_id},{total_ther_in_org}`
-            _, org_id, _ = row[0].split(',')
+            # Row[0] is defined by `{period},{org_id}`
+            _, org_id = row[0].split(',')
 
             if map.get(org_id):
                 existing = map[org_id]
@@ -40,8 +74,8 @@ class NumOfTherapistMapper:
 
         for _, row in dataframe.iterrows():
 
-            # Row[0] is defined by `{period},{org_id},{total_ther_in_org}`
-            _, org_id, _ = row[0].split(',')
+            # Row[0] is defined by `{period},{org_id}`
+            _, org_id = row[0].split(',')
 
             if map.get(org_id):
                 existing = map[org_id]
@@ -63,8 +97,8 @@ class NumOfTherapistMapper:
 
         for _, row in dataframe.iterrows():
 
-            # Row[0] is defined by `{period},{org_id},{total_ther_in_org}`
-            _, org_id, _ = row[0].split(',')
+            # Row[0] is defined by `{period},{org_id}`
+            _, org_id = row[0].split(',')
 
             if map.get(org_id):
                 existing = map[org_id]
@@ -82,8 +116,8 @@ class NumOfTherapistMapper:
         Converts that given `row` into a list of number of therapist dictionary.
         """
 
-        # Row[0] is defined by `{period},{org_id},{total_ther_in_org}`
-        period, _, _ = row[0].split(',')
+        # Row[0] is defined by `{period},{org_id}`
+        period, _ = row[0].split(',')
         period_start, period_end = period.split('/')
 
         # Row[1] is defined by `{total_active_ther},{total_inactive_ther}
@@ -111,15 +145,15 @@ class NumOfTherapistMapper:
         Converts that given `row` into a list of number of therapist dictionary.
         """
 
-        # Row[0] is defined by `{period},{org_id},{total_ther_in_org}`
-        period, _, _ = row[0].split(',')
+        # Row[0] is defined by `{period},{org_id}`
+        period, _ = row[0].split(',')
         period_start = parse(f'{period}-01', yearfirst=True)
         period_end = period_start + relativedelta(day=31)
 
         str_period_start = period_start.strftime('%Y-%m-%d')
         str_period_end = period_end.strftime('%Y-%m-%d')
 
-        # Row[1] is defined by `{total_active_ther},{total_inactive_ther}
+        # Row[1] is defined by `{total_active_ther},{total_inactive_ther}`
         total_active_ther, total_inactive_ther = row[1].split(',')
 
         return [
@@ -144,15 +178,15 @@ class NumOfTherapistMapper:
         Converts that given `row` into a list of number of therapist dictionary.
         """
 
-        # Row[0] is defined by `{period},{org_id},{total_ther_in_org}`
-        period, _, _ = row[0].split(',')
+        # Row[0] is defined by `{period},{org_id}`
+        period, _ = row[0].split(',')
         period_start = parse(f'{period}-01-01', yearfirst=True)
         period_end = parse(f'{period}-12-01', yearfirst=True) + relativedelta(day=31)
 
         str_period_start = period_start.strftime('%Y-%m-%d')
         str_period_end = period_end.strftime('%Y-%m-%d')
 
-        # Row[1] is defined by `{total_active_ther},{total_inactive_ther}
+        # Row[1] is defined by `{total_active_ther},{total_inactive_ther}`
         total_active_ther, total_inactive_ther = row[1].split(',')
 
         return [
