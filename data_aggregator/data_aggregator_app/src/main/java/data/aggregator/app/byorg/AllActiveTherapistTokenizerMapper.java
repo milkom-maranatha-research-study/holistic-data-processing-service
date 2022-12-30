@@ -1,4 +1,4 @@
-package data.aggregator.app;
+package data.aggregator.app.byorg;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import org.apache.hadoop.mapreduce.Mapper;
  * 
  * All incoming `text` will be calculated before we sent it to the Reducer class.
  */
-public class TherapistPerOrgTokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
+public class AllActiveTherapistTokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
 
 	private static Map<String, Integer> map = new HashMap<String, Integer>();
 
@@ -32,16 +32,16 @@ public class TherapistPerOrgTokenizerMapper extends Mapper<Object, Text, Text, I
 			String token = itr.nextToken();
 
 			// Extracts tokens by removing comma delimiter
-			// Input is coming in with this format "{period},{orgId},{therId}"
+			// Input is coming in with this format "{allTimePeriod},{allTimeThers},{therId}"
 			String[] tokens = token.split(",");
 
 			// Construct a new key
 			String newKey = String.format("%s,%s", tokens[0], tokens[1]); 
 
 			if(map.containsKey(newKey)) {
-				int totalThers = map.get(newKey).intValue() + 1;
+				int totalActiveThers = map.get(newKey).intValue() + 1;
 
-				map.put(newKey, totalThers);
+				map.put(newKey, totalActiveThers);
 
 				continue;
 			}
@@ -64,9 +64,9 @@ public class TherapistPerOrgTokenizerMapper extends Mapper<Object, Text, Text, I
 
 			String key = entry.getKey();
 
-			int totalThers = entry.getValue().intValue();
+			int totalActiveThers = entry.getValue().intValue();
 
-			context.write(new Text(key), new IntWritable(totalThers));
+			context.write(new Text(key), new IntWritable(totalActiveThers));
 		}
 
 		map.clear();

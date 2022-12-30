@@ -1,4 +1,4 @@
-package data.aggregator.app;
+package data.aggregator.app.byorg;
 
 import java.io.IOException;
 

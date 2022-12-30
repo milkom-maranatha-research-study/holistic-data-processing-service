@@ -1,4 +1,4 @@
-package data.aggregator.app;
+package data.aggregator.app.byorg;
 
 import java.io.IOException;
 
@@ -37,11 +37,11 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	private Job getJob(JobConf jobConfig, boolean isAggregateAll) throws IOException {
 		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Number of Therapists");
 
-		job.setMapperClass(isAggregateAll ? AllTherapistTokenizerMapper.class : TherapistPerOrgTokenizerMapper.class);		
+		job.setMapperClass(isAggregateAll ? AllTherapistTokenizerMapper.class : TherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
 
-		job.setReducerClass(isAggregateAll ? AllTherapistSumReducer.class : TherapistPerOrgSumReducer.class);
+		job.setReducerClass(isAggregateAll ? AllTherapistSumReducer.class : TherapistSumReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 
