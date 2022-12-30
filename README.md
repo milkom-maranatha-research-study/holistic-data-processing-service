@@ -1,8 +1,9 @@
 # data-processing-service
 It's a project that we use to:
-- Pull data from Backend
+- Pull Therapist and Interaction data from Backend
 - Perform data processing (extracts, cleaning and transforming)
-- Load preprocessed data and aggregates them
+- Perfrom data aggregation based on input files that are generated from 2nd bullet points
+- Sync back post-processed data to the Backend
 
 ## Prerequisites
 ### Docker
@@ -21,7 +22,5 @@ Please also ensures that _docker-compose_ command is installed.
 - Copy-paste `.env.example` as `.env`, and then fill in all the credential.
 - Run `$ docker network inspect holistic-net`, find the IPv4 address of the `holistic-backend_web_1` container, and then copy it.
 - Modifies the `.env` and set the value of `BACKEND_URL` with `http://{ipv4address}:8080`
-- Run `$ docker-compose up --build`
-- Once the `data_processor` service completed their tasks, it will produce `input` files that contains weekly, monthly, and yearly interaction. Those input files are required for the `data_aggregator` service.
-- If the `input` files generated successfully, run the aggregator script through `$ ./run_aggregator.sh`.
-- Once the `data_aggregator` service completed their tasks, it will produce output files that contains the weekly/monthly/yearly aggregate results.
+- Ensures you activate the python virtual environment. See [this](https://docs.python.org/3/library/venv.html#creating-virtual-environments) article on how to make it and activates it.
+- Run this command `$ ./run.sh`
