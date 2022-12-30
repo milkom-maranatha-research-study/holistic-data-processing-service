@@ -1,0 +1,38 @@
+package data.aggregator.app.bynd;
+
+import java.io.IOException;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Reducer;
+
+/** A Reducer class that receives inputs from the Mapper class. */
+public class ActiveTherapistSumReducer extends Reducer<Text, IntWritable, Text, Text> {
+	private Text result = new Text();
+	private Text finalKey = new Text();
+
+	/** Aggregates every value belonging to the key and write it to the HDFS Context. */
+	@Override
+	public void reduce(Text key, Iterable<IntWritable> values,  Context context) throws IOException, InterruptedException {
+		int sumActiveThers = 0;
+
+		for (IntWritable val : values) {
+			sumActiveThers += val.get();
+		}
+		
+		// Get available keys
+		String[] keys = key.toString().split("\t");
+		
+		// New keys are defined by "{period},{totalThersInOrg}"
+		String strTotalTherFromKey = keys[1];
+
+		finalKey.set(String.format("%s", keys[0]));
+
+		int totalThersInKey = Integer.parseInt(strTotalTherFromKey);
+		int totalInactiveThers = totalThersInKey - sumActiveThers;
+
+		result.set(String.format("%d\t%d\t%s", sumActiveThers, totalInactiveThers, strTotalTherFromKey));
+
+		context.write(finalKey, result);
+	}
+}
