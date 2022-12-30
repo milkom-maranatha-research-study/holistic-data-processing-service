@@ -36,7 +36,7 @@ public class AllActiveTherapistTokenizerMapper extends Mapper<Object, Text, Text
 			String[] tokens = token.split(",");
 
 			// Construct a new key
-			String newKey = String.format("%s,%s", tokens[0], tokens[1]); 
+			String newKey = String.format("%s\t%s", tokens[0], tokens[1]); 
 
 			if(map.containsKey(newKey)) {
 				int totalActiveThers = map.get(newKey).intValue() + 1;

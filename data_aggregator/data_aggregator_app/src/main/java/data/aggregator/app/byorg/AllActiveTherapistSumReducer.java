@@ -21,7 +21,7 @@ public class AllActiveTherapistSumReducer extends Reducer<Text, IntWritable, Tex
 		}
 		
 		// Get available keys
-		String[] keys = key.toString().split(",");
+		String[] keys = key.toString().split("\t");
 
 		// New keys are defined by "{allTimePeriod},{allTimeThers}"
 		finalKey.set(keys[0]);
@@ -31,7 +31,7 @@ public class AllActiveTherapistSumReducer extends Reducer<Text, IntWritable, Tex
 		int totalAllTimeThersInKey = Integer.parseInt(strAllTimeThersFromKey);
 		int totalAllTimeInactiveThers = totalAllTimeThersInKey - sumActiveThers;
 
-		result.set(String.format("%d,%d\t%s", sumActiveThers, totalAllTimeInactiveThers, strAllTimeThersFromKey));
+		result.set(String.format("%d\t%d\t%s", sumActiveThers, totalAllTimeInactiveThers, strAllTimeThersFromKey));
 
 		context.write(finalKey, result);
 	}

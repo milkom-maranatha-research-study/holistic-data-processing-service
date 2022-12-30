@@ -21,7 +21,7 @@ public class TherapistSumReducer extends Reducer<Text, IntWritable, Text, Text> 
 		}
 
 		// Get available keys
-		String[] keys = key.toString().split(",");
+		String[] keys = key.toString().split("\t");
 		
 		// New keys are defined by "{period},{orgId}"
 		String newKey = keys[0];

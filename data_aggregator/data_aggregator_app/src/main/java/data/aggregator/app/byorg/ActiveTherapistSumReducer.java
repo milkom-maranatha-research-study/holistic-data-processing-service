@@ -21,17 +21,17 @@ public class ActiveTherapistSumReducer extends Reducer<Text, IntWritable, Text, 
 		}
 		
 		// Get available keys
-		String[] keys = key.toString().split(",");
+		String[] keys = key.toString().split("\t");
 		
 		// New keys are defined by "{period},{orgId},{totalThersInOrg}"
 		String strTotalTherFromKey = keys[2];
 
-		finalKey.set(String.format("%s,%s", keys[0], keys[1]));
+		finalKey.set(String.format("%s\t%s", keys[0], keys[1]));
 
 		int totalThersInKey = Integer.parseInt(strTotalTherFromKey);
 		int totalInactiveThers = totalThersInKey - sumActiveThers;
 
-		result.set(String.format("%d,%d\t%s", sumActiveThers, totalInactiveThers, strTotalTherFromKey));
+		result.set(String.format("%d\t%d\t%s", sumActiveThers, totalInactiveThers, strTotalTherFromKey));
 
 		context.write(finalKey, result);
 	}
