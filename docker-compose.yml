@@ -40,6 +40,19 @@ services:
     command:
       - ./run_active_ther_processor.sh
 
+  rate_processor:
+    build: .
+    volumes:
+      - .:/data-processing-service
+    tty: true
+    container_name: rate_processor
+    env_file:
+      - .env
+    networks:
+      - holistic-net
+    command:
+      - ./run_rate_processor.sh
+
   sync_back:
     build: .
     volumes:
