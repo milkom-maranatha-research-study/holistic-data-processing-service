@@ -23,7 +23,7 @@ public class TherapistPerOrgSumReducer extends Reducer<Text, IntWritable, Text, 
 		// Get available keys
 		String[] keys = key.toString().split(",");
 		
-		// New keys are defined by "{allTimePeriod},{orgId}"
+		// New keys are defined by "{period},{orgId}"
 		String newKey = keys[0];
 		String orgId = keys[1];
 

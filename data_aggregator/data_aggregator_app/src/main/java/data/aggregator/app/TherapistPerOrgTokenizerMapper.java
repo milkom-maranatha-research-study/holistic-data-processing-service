@@ -32,7 +32,7 @@ public class TherapistPerOrgTokenizerMapper extends Mapper<Object, Text, Text, I
 			String token = itr.nextToken();
 
 			// Extracts tokens by removing comma delimiter
-			// Input is coming in with this format "{allTimePeriod},{orgId},{therId}"
+			// Input is coming in with this format "{period},{orgId},{therId}"
 			String[] tokens = token.split(",");
 
 			// Construct a new key
