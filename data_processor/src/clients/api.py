@@ -225,3 +225,18 @@ class AllTimeNumOfTherapistAPI(BackendAPIClient):
         response = self._api_request(method, path, num_of_therapist)
 
         return response.json()
+
+
+class OrganizationRateAPI(BackendAPIClient):
+
+    def upsert(self, org_id: str, rates: List[Dict]) -> Dict:
+        """
+        Create or update organization rates belonging to the Organization ID.
+        """
+
+        method = 'POST'
+        path = f'/organizations/{org_id}/rates/'
+
+        response = self._api_request(method, path, rates)
+
+        return response.json()
