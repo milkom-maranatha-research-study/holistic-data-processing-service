@@ -14,6 +14,9 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import data.aggregator.app.AllTherapistSumReducer;
+import data.aggregator.app.AllTherapistTokenizerMapper;
+
 public class TherapistAggregatorDriver extends Configured implements Tool {
 
 	@Override
