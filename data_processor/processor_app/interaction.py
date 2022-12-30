@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 AGG_ORG_NUM_OF_THERS_PATH = 'output/org/num-of-ther'
-AGG_ORG_NUM_OF_THERS_FILENAME = 'all-aggregate'
-AGG_ORG_NUM_OF_THERS_PER_ORG_FILENAME = 'per-org-aggregate'
+AGG_ORG_NUM_OF_THERS_FILENAME = 'org-all-aggregate'
+AGG_ORG_NUM_OF_THERS_PER_ORG_FILENAME = 'org-per-org-aggregate'
 
 ORG_INTERACTION_INPUT_PATH = 'input/org-interaction'
 ORG_INTERACTION_FILENAME = 'org-interaction'
