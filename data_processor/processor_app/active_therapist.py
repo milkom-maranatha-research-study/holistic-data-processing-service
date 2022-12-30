@@ -288,7 +288,7 @@ class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
 
         # Generates `period_end` column
         dataframe['period_end'] = dataframe.apply(
-            lambda row: row['period_start'] + relativedelta(day=31, month=11),
+            lambda row: row['period_start'] + relativedelta(day=31, month=12),
             axis=1
         )
 

@@ -265,8 +265,8 @@ class OrganizationRateBackendOperation:
         back to the Backend service.
         """
         self._sync_back_weekly_data()
-        # self._sync_back_monthly_data()
-        # self._sync_back_yearly_data()
+        self._sync_back_monthly_data()
+        self._sync_back_yearly_data()
 
     def _sync_back_weekly_data(self) -> None:
         """
