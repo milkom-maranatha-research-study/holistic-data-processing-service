@@ -13,79 +13,20 @@ from data_processor.settings import configure_logging
 logger = logging.getLogger(__name__)
 
 
-AGG_ACTIVE_THERS_INPUT_PATH = 'output/active-inactive'
-AGG_ACTIVE_THERS_FILENAME = 'aggregate'
+ORG_AGG_ACTIVE_THERS_INPUT_PATH = 'output/org/active-ther-aggregate'
+ORG_AGG_WEEKLY_ACTIVE_THERS_FILENAME = 'org-active-ther-weekly-aggregate'
+ORG_AGG_MONTHLY_ACTIVE_THERS_FILENAME = 'org-active-ther-monthly-aggregate'
+ORG_AGG_YEARLY_ACTIVE_THERS_FILENAME = 'org-active-ther-yearly-aggregate'
 
-ORG_RATE_INPUT_PATH = 'input/organization_rate'
-ORG_RATE_FILENAME = 'rate'
+ORG_RATE_WEEKLY_INPUT_PATH = 'input/org-rate/weekly'
+ORG_RATE_WEEKLY_INPUT_FILENAME = 'input-rate-weekly-aggregate'
+ORG_RATE_MONTHLY_INPUT_PATH = 'input/org-rate/monthly'
+ORG_RATE_MONTHLY_INPUT_FILENAME = 'input-rate-monthly-aggregate'
+ORG_RATE_YEARLY_INPUT_PATH = 'input/org-rate/yearly'
+ORG_RATE_YEARLY_INPUT_FILENAME = 'input-rate-yearly-aggregate'
 
 
-class WeeklyActiveTherProcessor:
-
-    def __init__(self) -> None:
-
-        # Runs active thers data processor
-        process_start_at = datetime.now()
-
-        self._process_data()
-
-        process_end_at = datetime.now()
-
-        tag = "Active therapists weekly data processing"
-        print_time_duration(tag, process_start_at, process_end_at)
-
-    def _process_data(self) -> None:
-        """
-        Normalize weekly active therapists
-        and writes the result into multiple CSV files.
-        """
-
-        # Step 1 - Load weekly active therapists
-        logger.info("Load weekly active therapists data from disk...")
-        dataframe = pd.read_csv(
-            f'{AGG_ACTIVE_THERS_INPUT_PATH}/weekly-{AGG_ACTIVE_THERS_FILENAME}.csv',
-            sep='\t',
-            names=['period_org_id', 'active_inactive', 'total_ther'],
-            dtype={
-                'period_org_id': 'str',
-                'active_inactive': 'str',
-                'total_ther': 'Int64'
-            }
-        )
-
-        # Step 2 - Normalize dataframe
-        logger.info("Processing dataframe...")
-
-        # * 2.1 Extract `period_start`, `period_end`, and `organization_id` columns
-        dataframe[['period_start', 'period_end_org_id']] = dataframe.period_org_id.str.split('/', expand=True)
-        dataframe[['period_end', 'organization_id']] = dataframe.period_end_org_id.str.split(',', expand=True)
-
-        # * 2.2 Convert `period_start` and `period_end` columns into datetime object
-        dataframe[['period_start', 'period_end']] = dataframe[
-            ['period_start', 'period_end']
-        ].apply(pd.to_datetime, errors='coerce')
-
-        # * 2.3 Extract `active_ther` and `inactive_ther` columns
-        dataframe[['active_ther', 'inactive_ther']] = dataframe.active_inactive.str.split(',', expand=True)
-
-        # * 2.4 Convert `organization_id`, `active_ther` and `inactive_ther` columns data type into a number
-        dataframe[['organization_id', 'active_ther', 'inactive_ther']] = dataframe[
-            ['organization_id', 'active_ther', 'inactive_ther']
-        ].apply(pd.to_numeric, errors='coerce')
-
-        # * 2.5 Removes unnecessary columns
-        dataframe = dataframe.drop(columns=['active_inactive', 'period_org_id', 'period_end_org_id'])
-
-        # Step 3 - Sort dataframe by date period
-        logger.info("Sorting dataframe by date period...")
-        dataframe = dataframe.sort_values(by=['period_start', 'period_end']).reset_index(drop=True)
-
-        # Step 4 - Calculate active/inactive thers before period
-        logger.info("Calculating active/inactive thers before period...")
-        dataframe = self._calculate_num_of_thers_before_period(dataframe)
-
-        # Step 5 - Save results into CSV files
-        self._to_csv(dataframe)
+class OrgActiveTherProcessor:
 
     def _calculate_num_of_thers_before_period(self, dataframe: DataFrame) -> DataFrame:
         """
@@ -94,7 +35,7 @@ class WeeklyActiveTherProcessor:
         """
         organization_ids = dataframe['organization_id'].drop_duplicates().array
 
-        joined_df = None
+        dfs = []
 
         for org_id in organization_ids:
             org_df = dataframe[dataframe['organization_id'] == org_id]
@@ -105,27 +46,28 @@ class WeeklyActiveTherProcessor:
 
             org_df = org_df.fillna(0).astype(int)
 
-            if joined_df is None:
-                joined_df = org_df
-            else:
-                joined_df = pd.concat([joined_df, org_df])
+            dfs.append(org_df)
 
-        joined_df[['period_start', 'period_end']] = joined_df[
+        dataframe = pd.concat(dfs)
+
+        # Period start/end somehow is converted to milliseconds
+        # Therefore we need to convert them back to `datetime` object.
+        dataframe[['period_start', 'period_end']] = dataframe[
             ['period_start', 'period_end']
         ].apply(pd.to_datetime, errors='coerce')
 
-        return joined_df
+        return dataframe
 
-    def _to_csv(self, dataframe: DataFrame) -> None:
+    def _to_csv(self, dataframe: DataFrame, path: str, filename: str) -> None:
         """
         Saves that `dataframe` into CSV files.
         """
-        is_exists = os.path.exists(ORG_RATE_INPUT_PATH)
+        is_exists = os.path.exists(path)
 
         if not is_exists:
-            os.makedirs(ORG_RATE_INPUT_PATH)
+            os.makedirs(path)
 
-        logger.info("Save Therapist data into CSV files...")
+        logger.info("Save Organizations' active therapists data into CSV file...")
 
         dataframe[[
             'period_start',
@@ -137,13 +79,13 @@ class WeeklyActiveTherProcessor:
             'active_ther_b_period',
             'inactive_ther_b_period'
         ]].to_csv(
-            f'{ORG_RATE_INPUT_PATH}/weekly-per-org-{ORG_RATE_FILENAME}.csv',
+            f'{path}/{filename}.csv',
             index=False,
             header=False
         )
 
 
-class MonthlyActiveTherProcessor:
+class OrgWeeklyActiveTherProcessor(OrgActiveTherProcessor):
 
     def __init__(self) -> None:
 
@@ -154,58 +96,111 @@ class MonthlyActiveTherProcessor:
 
         process_end_at = datetime.now()
 
-        tag = "Active therapists monthly data processing"
+        tag = "Organizations' active therapists weekly data processing"
         print_time_duration(tag, process_start_at, process_end_at)
 
     def _process_data(self) -> None:
         """
-        Normalize monthly active therapists
+        Process Organizations' weekly active therapists data
         and writes the result into multiple CSV files.
         """
 
-        # Step 1 - Load monthly active therapists
-        logger.info("Load monthly active therapists data from disk...")
+        logger.info("Load Organizations' weekly active therapists data from disk...")
+
+        # Step 1 - Load weekly active therapists
         dataframe = pd.read_csv(
-            f'{AGG_ACTIVE_THERS_INPUT_PATH}/monthly-{AGG_ACTIVE_THERS_FILENAME}.csv',
+            f'{ORG_AGG_ACTIVE_THERS_INPUT_PATH}/{ORG_AGG_WEEKLY_ACTIVE_THERS_FILENAME}.csv',
             sep='\t',
-            names=['period_org_id', 'active_inactive', 'total_ther'],
+            names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
-                'period_org_id': 'str',
-                'active_inactive': 'str',
+                'period': 'str',
+                'organization_id': 'Int64',
+                'active_ther': 'Int64',
+                'inactive_ther': 'Int64',
                 'total_ther': 'Int64'
             }
         )
 
-        # Step 2 - Normalize dataframe
         logger.info("Processing dataframe...")
 
-        # * 2.1 Extract `period` and `organization_id` columns
-        dataframe[['period', 'organization_id']] = dataframe.period_org_id.str.split(',', expand=True)
+        # Step 2 - Extracts `period_start` and `period_end` columns
+        # * 2.1 Split period start/end from the `period` column
+        dataframe[['period_start', 'period_end']] = dataframe.period.str.split('/', expand=True)
 
-        # * 2.2 Generates `period_start` and `period_end` columns
-        dataframe = self._generate_date_period(dataframe)
+        # * 2.2 Convert `period_start` and `period_end` columns into datetime object
+        dataframe[['period_start', 'period_end']] = dataframe[
+            ['period_start', 'period_end']
+        ].apply(pd.to_datetime, yearfirst=True, errors='coerce')
 
-        # * 2.3 Extract `active_ther` and `inactive_ther` columns
-        dataframe[['active_ther', 'inactive_ther']] = dataframe.active_inactive.str.split(',', expand=True)
+        # Step 3 - Removes unnecessary columns
+        dataframe = dataframe.drop(columns=['period'])
 
-        # * 2.4 Convert `organization_id`, `active_ther` and `inactive_ther` columns data type into a number
-        dataframe[['organization_id', 'active_ther', 'inactive_ther']] = dataframe[
-            ['organization_id', 'active_ther', 'inactive_ther']
-        ].apply(pd.to_numeric, errors='coerce')
-
-        # * 2.5 Removes unnecessary columns
-        dataframe = dataframe.drop(columns=['active_inactive', 'period_org_id', 'period'])
-
-        # Step 3 - Sort dataframe by date period
-        logger.info("Sorting dataframe by date period...")
+        # Step 4 - Sort dataframe by date period
         dataframe = dataframe.sort_values(by=['period_start', 'period_end']).reset_index(drop=True)
 
-        # Step 4 - Calculate active/inactive thers before period
-        logger.info("Calculating active/inactive thers before period...")
+        logger.info("Calculating active/inactive thers before period per Organization...")
+
+        # Step 5 - Calculate active/inactive thers before period
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
-        # Step 5 - Save results into CSV files
-        self._to_csv(dataframe)
+        # Step 6 - Save results into CSV file
+        self._to_csv(dataframe, ORG_RATE_WEEKLY_INPUT_PATH, ORG_RATE_WEEKLY_INPUT_FILENAME)
+
+
+class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
+
+    def __init__(self) -> None:
+
+        # Runs active thers data processor
+        process_start_at = datetime.now()
+
+        self._process_data()
+
+        process_end_at = datetime.now()
+
+        tag = "Organizations' active therapists monthly data processing"
+        print_time_duration(tag, process_start_at, process_end_at)
+
+    def _process_data(self) -> None:
+        """
+        Process Organizations' monthly active therapists data
+        and writes the result into multiple CSV files.
+        """
+
+        logger.info("Load monthly active therapists data from disk...")
+
+        # Step 1 - Load Organizations' monthly active therapists
+        dataframe = pd.read_csv(
+            f'{ORG_AGG_ACTIVE_THERS_INPUT_PATH}/{ORG_AGG_MONTHLY_ACTIVE_THERS_FILENAME}.csv',
+            sep='\t',
+            names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
+            dtype={
+                'period': 'str',
+                'organization_id': 'Int64',
+                'active_ther': 'Int64',
+                'inactive_ther': 'Int64',
+                'total_ther': 'Int64'
+            }
+        )
+
+        logger.info("Processing dataframe...")
+
+        # Step 2 - Generates `period_start` and `period_end` columns
+        dataframe = self._generate_date_period(dataframe)
+
+        # Step 3 - Removes unnecessary columns
+        dataframe = dataframe.drop(columns=['period'])
+
+        # Step 4 - Sort dataframe by date period
+        dataframe = dataframe.sort_values(by=['period_start', 'period_end']).reset_index(drop=True)
+
+        logger.info("Calculating active/inactive thers before period per Organization...")
+
+        # Step 5 - Calculate active/inactive thers before period
+        dataframe = self._calculate_num_of_thers_before_period(dataframe)
+
+        # Step 6 - Save results into CSV file
+        self._to_csv(dataframe, ORG_RATE_MONTHLY_INPUT_PATH, ORG_RATE_MONTHLY_INPUT_FILENAME)
 
     def _generate_date_period(self, dataframe: DataFrame) -> DataFrame:
         """
@@ -225,63 +220,8 @@ class MonthlyActiveTherProcessor:
 
         return dataframe
 
-    def _calculate_num_of_thers_before_period(self, dataframe: DataFrame) -> DataFrame:
-        """
-        Calculates total active/inactive ther before period per Organization
-        and returns a copy of that `dataframe`.
-        """
-        organization_ids = dataframe['organization_id'].drop_duplicates().array
 
-        joined_df = None
-
-        for org_id in organization_ids:
-            org_df = dataframe[dataframe['organization_id'] == org_id]
-
-            org_df[[
-                'active_ther_b_period', 'inactive_ther_b_period'
-            ]] = org_df[['active_ther', 'inactive_ther']].shift(1)
-
-            org_df = org_df.fillna(0).astype(int)
-
-            if joined_df is None:
-                joined_df = org_df
-            else:
-                joined_df = pd.concat([joined_df, org_df])
-
-        joined_df[['period_start', 'period_end']] = joined_df[
-            ['period_start', 'period_end']
-        ].apply(pd.to_datetime, errors='coerce')
-
-        return joined_df
-
-    def _to_csv(self, dataframe: DataFrame) -> None:
-        """
-        Saves that `dataframe` into CSV files.
-        """
-        is_exists = os.path.exists(ORG_RATE_INPUT_PATH)
-
-        if not is_exists:
-            os.makedirs(ORG_RATE_INPUT_PATH)
-
-        logger.info("Save Therapist data into CSV files...")
-
-        dataframe[[
-            'period_start',
-            'period_end',
-            'organization_id',
-            'active_ther',
-            'inactive_ther',
-            'total_ther',
-            'active_ther_b_period',
-            'inactive_ther_b_period'
-        ]].to_csv(
-            f'{ORG_RATE_INPUT_PATH}/monthly-per-org-{ORG_RATE_FILENAME}.csv',
-            index=False,
-            header=False
-        )
-
-
-class YearlyActiveTherProcessor:
+class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
 
     def __init__(self) -> None:
 
@@ -292,58 +232,48 @@ class YearlyActiveTherProcessor:
 
         process_end_at = datetime.now()
 
-        tag = "Active therapists yearly data processing"
+        tag = "Active Organizations' therapists yearly data processing"
         print_time_duration(tag, process_start_at, process_end_at)
 
     def _process_data(self) -> None:
         """
-        Normalize yearly active therapists
+        Process Organizations' yearly active therapists data
         and writes the result into multiple CSV files.
         """
 
         # Step 1 - Load yearly active therapists
-        logger.info("Load yearly active therapists data from disk...")
+        logger.info("Load Organizations' yearly active therapists data from disk...")
         dataframe = pd.read_csv(
-            f'{AGG_ACTIVE_THERS_INPUT_PATH}/yearly-{AGG_ACTIVE_THERS_FILENAME}.csv',
+            f'{ORG_AGG_ACTIVE_THERS_INPUT_PATH}/{ORG_AGG_YEARLY_ACTIVE_THERS_FILENAME}.csv',
             sep='\t',
-            names=['period_org_id', 'active_inactive', 'total_ther'],
+            names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
-                'period_org_id': 'str',
-                'active_inactive': 'str',
+                'period': 'str',
+                'organization_id': 'Int64',
+                'active_ther': 'Int64',
+                'inactive_ther': 'Int64',
                 'total_ther': 'Int64'
             }
         )
 
-        # Step 2 - Normalize dataframe
         logger.info("Processing dataframe...")
 
-        # * 2.1 Extract `period` and `organization_id` columns
-        dataframe[['period', 'organization_id']] = dataframe.period_org_id.str.split(',', expand=True)
-
-        # * 2.2 Generates `period_start` and `period_end` columns
+        # Step 2 - Generates `period_start` and `period_end` columns
         dataframe = self._generate_date_period(dataframe)
 
-        # * 2.3 Extract `active_ther` and `inactive_ther` columns
-        dataframe[['active_ther', 'inactive_ther']] = dataframe.active_inactive.str.split(',', expand=True)
+        # Step 3 - Removes unnecessary columns
+        dataframe = dataframe.drop(columns=['period'])
 
-        # * 2.4 Convert `organization_id`, `active_ther` and `inactive_ther` columns data type into a number
-        dataframe[['organization_id', 'active_ther', 'inactive_ther']] = dataframe[
-            ['organization_id', 'active_ther', 'inactive_ther']
-        ].apply(pd.to_numeric, errors='coerce')
-
-        # * 2.5 Removes unnecessary columns
-        dataframe = dataframe.drop(columns=['active_inactive', 'period_org_id', 'period'])
-
-        # Step 3 - Sort dataframe by date period
-        logger.info("Sorting dataframe by date period...")
+        # Step 4 - Sort dataframe by date period
         dataframe = dataframe.sort_values(by=['period_start', 'period_end']).reset_index(drop=True)
 
-        # Step 4 - Calculate active/inactive thers before period
-        logger.info("Calculating active/inactive thers before period...")
+        logger.info("Calculating active/inactive thers before period per Organization...")
+
+        # Step 5 - Calculate active/inactive thers before period
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
-        # Step 5 - Save results into CSV files
-        self._to_csv(dataframe)
+        # Step 6 - Save results into CSV file
+        self._to_csv(dataframe, ORG_RATE_YEARLY_INPUT_PATH, ORG_RATE_YEARLY_INPUT_FILENAME)
 
     def _generate_date_period(self, dataframe: DataFrame) -> DataFrame:
         """
@@ -362,66 +292,3 @@ class YearlyActiveTherProcessor:
         )
 
         return dataframe
-
-    def _calculate_num_of_thers_before_period(self, dataframe: DataFrame) -> DataFrame:
-        """
-        Calculates total active/inactive ther before period per Organization
-        and returns a copy of that `dataframe`.
-        """
-        organization_ids = dataframe['organization_id'].drop_duplicates().array
-
-        joined_df = None
-
-        for org_id in organization_ids:
-            org_df = dataframe[dataframe['organization_id'] == org_id]
-
-            org_df[[
-                'active_ther_b_period', 'inactive_ther_b_period'
-            ]] = org_df[['active_ther', 'inactive_ther']].shift(1)
-
-            org_df = org_df.fillna(0).astype(int)
-
-            if joined_df is None:
-                joined_df = org_df
-            else:
-                joined_df = pd.concat([joined_df, org_df])
-
-        joined_df[['period_start', 'period_end']] = joined_df[
-            ['period_start', 'period_end']
-        ].apply(pd.to_datetime, errors='coerce')
-
-        return joined_df
-
-    def _to_csv(self, dataframe: DataFrame) -> None:
-        """
-        Saves that `dataframe` into CSV files.
-        """
-        is_exists = os.path.exists(ORG_RATE_INPUT_PATH)
-
-        if not is_exists:
-            os.makedirs(ORG_RATE_INPUT_PATH)
-
-        logger.info("Save Therapist data into CSV files...")
-
-        dataframe[[
-            'period_start',
-            'period_end',
-            'organization_id',
-            'active_ther',
-            'inactive_ther',
-            'total_ther',
-            'active_ther_b_period',
-            'inactive_ther_b_period'
-        ]].to_csv(
-            f'{ORG_RATE_INPUT_PATH}/yearly-per-org-{ORG_RATE_FILENAME}.csv',
-            index=False,
-            header=False
-        )
-
-
-if __name__ == '__main__':
-    configure_logging()
-
-    WeeklyActiveTherProcessor()
-    MonthlyActiveTherProcessor()
-    YearlyActiveTherProcessor()
