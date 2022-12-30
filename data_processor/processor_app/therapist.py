@@ -12,8 +12,8 @@ from data_processor.settings import configure_logging
 logger = logging.getLogger(__name__)
 
 
-THERAPIST_INPUT_PATH = 'input/therapist'
-THERAPIST_FILENAME = 'therapist'
+ORG_THERAPIST_INPUT_PATH = 'input/org-therapist'
+ORG_THERAPIST_FILENAME = 'org-therapist'
 
 
 class TherapistDataProcessor:
@@ -65,10 +65,10 @@ class TherapistDataProcessor:
         """
         Saves that `dataframe` into CSV files.
         """
-        is_exists = os.path.exists(THERAPIST_INPUT_PATH)
+        is_exists = os.path.exists(ORG_THERAPIST_INPUT_PATH)
 
         if not is_exists:
-            os.makedirs(THERAPIST_INPUT_PATH)
+            os.makedirs(ORG_THERAPIST_INPUT_PATH)
 
         # Slice dataframe into 10 partitions
         dataframe = dataframe.repartition(npartitions=10)
@@ -77,7 +77,7 @@ class TherapistDataProcessor:
         logger.info("Save Therapist data into CSV files...")
 
         dataframe[['all_time_period', 'organization_id', 'id']].to_csv(
-            f'{THERAPIST_INPUT_PATH}/{THERAPIST_FILENAME}-part-*.csv',
+            f'{ORG_THERAPIST_INPUT_PATH}/{ORG_THERAPIST_FILENAME}-part-*.csv',
             index=False,
             header=False
         )

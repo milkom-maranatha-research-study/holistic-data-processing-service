@@ -15,12 +15,12 @@ from data_processor.settings import configure_logging
 logger = logging.getLogger(__name__)
 
 
-AGG_NUM_OF_THERS_PATH = 'output/num_of_ther'
-AGG_NUM_OF_THERS_FILENAME = 'all-aggregate'
-AGG_NUM_OF_THERS_PER_ORG_FILENAME = 'per-org-aggregate'
+AGG_ORG_NUM_OF_THERS_PATH = 'output/org/num-of-ther'
+AGG_ORG_NUM_OF_THERS_FILENAME = 'all-aggregate'
+AGG_ORG_NUM_OF_THERS_PER_ORG_FILENAME = 'per-org-aggregate'
 
-INTERACTION_INPUT_PATH = 'input/interaction'
-INTERACTION_FILENAME = 'interaction'
+ORG_INTERACTION_INPUT_PATH = 'input/org-interaction'
+ORG_INTERACTION_FILENAME = 'org-interaction'
 
 
 class InteractionDataProcessor:
@@ -90,14 +90,15 @@ class InteractionDataProcessor:
         # *     the all-time number of active/inactive therapists in NiceDay.
         logger.info("Merge all-time interaction dataframe with the number of therapists dataframe...")
         num_of_thers_dataframe = dask_dataframe.read_csv(
-            f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_FILENAME}.csv',
+            f'{AGG_ORG_NUM_OF_THERS_PATH}/{AGG_ORG_NUM_OF_THERS_FILENAME}.csv',
             sep='\t',
-            names=['period', 'total_thers'],
+            names=['all_time_period', 'all_time_thers'],
             dtype={
-                'period': 'str',
+                'all_time_period': 'str',
                 'total_thers': 'Int64'
             }
         )
+
         head = num_of_thers_dataframe.head()
         all_time_dataframe = cleaned_dataframe.assign(
             all_time_period=lambda _: head.iloc[0][0],
@@ -111,11 +112,11 @@ class InteractionDataProcessor:
         # *     the number of active/inactive therapists per org in one go.
         logger.info("Merge interaction dataframe with the therapist dataframe...")
         num_thers_per_org_dataframe = dask_dataframe.read_csv(
-            f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_PER_ORG_FILENAME}.csv',
+            f'{AGG_ORG_NUM_OF_THERS_PATH}/{AGG_ORG_NUM_OF_THERS_PER_ORG_FILENAME}.csv',
             sep='\t',
-            names=['all_time_period', 'organization_id', 'total_thers_in_org'],
+            names=['period', 'organization_id', 'total_thers_in_org'],
             dtype={
-                'all_time_period': 'str',
+                'period': 'str',
                 'organization_id': 'Int64',
                 'total_thers_in_org': 'Int64'
             }
@@ -183,13 +184,13 @@ class InteractionDataProcessor:
         Slices and saves that `dataframe` into multiple CSV files.
         """
         # Check the input directory availability
-        is_exists = os.path.exists(INTERACTION_INPUT_PATH)
+        is_exists = os.path.exists(ORG_INTERACTION_INPUT_PATH)
 
         if not is_exists:
-            os.makedirs(INTERACTION_INPUT_PATH)
+            os.makedirs(ORG_INTERACTION_INPUT_PATH)
 
         # Check the period directory availability
-        path = f'{INTERACTION_INPUT_PATH}/{period_type}'
+        path = f'{ORG_INTERACTION_INPUT_PATH}/{period_type}'
 
         is_exists = os.path.exists(path)
 
@@ -202,13 +203,13 @@ class InteractionDataProcessor:
         # Save and simplifies interaction dataframe
         if period_type == 'alltime':
             dataframe[['all_time_period', 'all_time_thers', 'therapist_id']].to_csv(
-                f'{path}/{INTERACTION_FILENAME}-part-*.csv',
+                f'{path}/{ORG_INTERACTION_FILENAME}-part-*.csv',
                 index=False,
                 header=False
             )
         else:
             dataframe[['period', 'organization_id', 'total_thers_in_org', 'therapist_id']].to_csv(
-                f'{path}/{INTERACTION_FILENAME}-part-*.csv',
+                f'{path}/{ORG_INTERACTION_FILENAME}-part-*.csv',
                 index=False,
                 header=False
             )
