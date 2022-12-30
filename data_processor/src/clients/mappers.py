@@ -8,32 +8,31 @@ from typing import Dict, List
 
 class AllTimeNumOfTherapistMapper:
 
-    def to_all_time_therapists(self, dataframe: DataFrame) -> Dict:
+    def to_num_of_thers_map(self, dataframe: DataFrame) -> Dict:
         """
         Converts that given `dataframe` into the all-time number of therapists.
+
+        Dataframe's row is defined by:
+        ```
+        [{period},{total_active_thers},{total_inactive_thers},{total_thers}]
         """
         num_of_thers = []
 
         for _, row in dataframe.iterrows():
-            # Row[0] is defined by `{all_time_period}`
             period_start, period_end = row[0].split('/')
-
-            # Row[1] is defined by:
-            # `{all_time_total_active_ther},{all_time_total_inactive_ther}
-            total_active_ther, total_inactive_ther = row[1].split(',')
 
             num_of_thers += [
                 {
                     'start_date': period_start,
                     'end_date': period_end,
                     'is_active': True,
-                    'value': total_active_ther
+                    'value': int(row[1])
                 },
                 {
                     'start_date': period_start,
                     'end_date': period_end,
                     'is_active': False,
-                    'value': total_inactive_ther
+                    'value': int(row[2])
                 }
             ]
 
@@ -42,86 +41,60 @@ class AllTimeNumOfTherapistMapper:
 
 class NumOfTherapistMapper:
 
-    def to_weekly_therapists_map(self, dataframe: DataFrame) -> Dict:
+    def to_num_of_thers_map(self, dataframe: DataFrame, period_type: str) -> Dict:
         """
-        Converts that given `dataframe` into a weekly number of therapist
-        dictionary per organization.
-        """
-        map = {}
+        Converts that given `dataframe` into number of therapists
+        dictionary per organization for that specific `period_type`.
 
-        for _, row in dataframe.iterrows():
-
-            # Row[0] is defined by `{period},{org_id}`
-            _, org_id = row[0].split(',')
-
-            if map.get(org_id):
-                existing = map[org_id]
-
-                map[org_id] = existing + self._get_weekly_num_of_ther(row)
-
-                continue
-
-            map[org_id] = self._get_weekly_num_of_ther(row)
-
-        return map
-
-    def to_monthly_therapists_map(self, dataframe: DataFrame) -> Dict:
-        """
-        Converts that given `dataframe` into a monthly number of therapist
-        dictionary per organization.
+        Dataframe's row is defined by:
+        ```
+        [{period},{org_id},{active_ther},{inactive_ther},{total_ther}]
         """
         map = {}
 
         for _, row in dataframe.iterrows():
 
-            # Row[0] is defined by `{period},{org_id}`
-            _, org_id = row[0].split(',')
+            org_id = int(row[1])
+            org_num_of_thers = self._get_num_of_thers(row, period_type)
 
             if map.get(org_id):
                 existing = map[org_id]
 
-                map[org_id] = existing + self._get_monthly_num_of_ther(row)
+                map[org_id] = existing + org_num_of_thers
 
                 continue
 
-            map[org_id] = self._get_monthly_num_of_ther(row)
+            map[org_id] = org_num_of_thers
 
         return map
 
-    def to_yearly_therapists_map(self, dataframe: DataFrame) -> Dict:
-        """
-        Converts that given `dataframe` into a yearly number of therapist
-        dictionary per organization.
-        """
-        map = {}
-
-        for _, row in dataframe.iterrows():
-
-            # Row[0] is defined by `{period},{org_id}`
-            _, org_id = row[0].split(',')
-
-            if map.get(org_id):
-                existing = map[org_id]
-
-                map[org_id] = existing + self._get_yearly_num_of_ther(row)
-
-                continue
-
-            map[org_id] = self._get_yearly_num_of_ther(row)
-
-        return map
-
-    def _get_weekly_num_of_ther(self, row: Series) -> List[Dict]:
+    def _get_num_of_thers(self, row: Series, period_type: str) -> List[Dict]:
         """
         Converts that given `row` into a list of number of therapist dictionary.
         """
+        if period_type == 'weekly':
+            return self._get_weekly_num_of_thers(row)
 
-        # Row[0] is defined by `{period},{org_id}`
-        period, _ = row[0].split(',')
+        elif period_type == 'monthly':
+            return self._get_monthly_num_of_thers(row)
+
+        elif period_type == 'yearly':
+            return self._get_yearly_num_of_thers(row)
+
+        return []
+
+    def _get_weekly_num_of_thers(self, row: Series) -> List[Dict]:
+        """
+        Converts that given `row` into a list of number of therapist dictionary.
+
+        Row is defined by:
+        ```
+        [{period},{org_id},{active_ther},{inactive_ther},{total_ther}]
+        ```
+        """
+
+        period = row[0]
         period_start, period_end = period.split('/')
-
-        # Row[1] is defined by `{total_active_ther},{total_inactive_ther}
-        total_active_ther, total_inactive_ther = row[1].split(',')
 
         return [
             {
@@ -129,79 +102,138 @@ class NumOfTherapistMapper:
                 'start_date': period_start,
                 'end_date': period_end,
                 'is_active': True,
-                'value': total_active_ther
+                'value': int(row[2])
             },
             {
                 'period_type': 'weekly',
                 'start_date': period_start,
                 'end_date': period_end,
                 'is_active': False,
-                'value': total_inactive_ther
+                'value': int(row[3])
             }
         ]
 
-    def _get_monthly_num_of_ther(self, row: Series) -> List[Dict]:
+    def _get_monthly_num_of_thers(self, row: Series) -> List[Dict]:
         """
         Converts that given `row` into a list of number of therapist dictionary.
-        """
 
-        # Row[0] is defined by `{period},{org_id}`
-        period, _ = row[0].split(',')
+        Row is defined by:
+        ```
+        [{period},{org_id},{active_ther},{inactive_ther},{total_ther}]
+        ```
+        """
+        period = row[0]
         period_start = parse(f'{period}-01', yearfirst=True)
         period_end = period_start + relativedelta(day=31)
 
         str_period_start = period_start.strftime('%Y-%m-%d')
         str_period_end = period_end.strftime('%Y-%m-%d')
 
-        # Row[1] is defined by `{total_active_ther},{total_inactive_ther}`
-        total_active_ther, total_inactive_ther = row[1].split(',')
-
         return [
             {
                 'period_type': 'monthly',
                 'start_date': str_period_start,
                 'end_date': str_period_end,
                 'is_active': True,
-                'value': total_active_ther
+                'value': int(row[2])
             },
             {
                 'period_type': 'monthly',
                 'start_date': str_period_start,
                 'end_date': str_period_end,
                 'is_active': False,
-                'value': total_inactive_ther
+                'value': int(row[3])
             }
         ]
 
-    def _get_yearly_num_of_ther(self, row: Series) -> List[Dict]:
+    def _get_yearly_num_of_thers(self, row: Series) -> List[Dict]:
         """
         Converts that given `row` into a list of number of therapist dictionary.
+
+        Row is defined by:
+        ```
+        [{period},{org_id},{active_ther},{inactive_ther},{total_ther}]
+        ```
         """
 
-        # Row[0] is defined by `{period},{org_id}`
-        period, _ = row[0].split(',')
+        period = row[0]
         period_start = parse(f'{period}-01-01', yearfirst=True)
         period_end = parse(f'{period}-12-01', yearfirst=True) + relativedelta(day=31)
 
         str_period_start = period_start.strftime('%Y-%m-%d')
         str_period_end = period_end.strftime('%Y-%m-%d')
 
-        # Row[1] is defined by `{total_active_ther},{total_inactive_ther}`
-        total_active_ther, total_inactive_ther = row[1].split(',')
-
         return [
             {
                 'period_type': 'yearly',
                 'start_date': str_period_start,
                 'end_date': str_period_end,
                 'is_active': True,
-                'value': total_active_ther
+                'value': int(row[2])
             },
             {
                 'period_type': 'yearly',
                 'start_date': str_period_start,
                 'end_date': str_period_end,
                 'is_active': False,
-                'value': total_inactive_ther
+                'value': int(row[3])
+            }
+        ]
+
+
+class OrganizationRateMapper:
+
+    def to_rates_map(self, dataframe: DataFrame, period_type: str) -> Dict:
+        """
+        Converts that given `dataframe` into a map of the organization rates
+        based on that given `period_type`.
+
+        Dataframe's row is defined by:
+        ```
+        [{period_start},{period_end},{org_id},{churn_rate},{retention_rate}]
+        ```
+        """
+        map = {}
+
+        for _, row in dataframe.iterrows():
+
+            org_id = int(row[2])
+            org_rates = self._get_rate(row, period_type)
+
+            if map.get(org_id):
+                existing = map[org_id]
+
+                map[org_id] = existing + org_rates
+
+                continue
+
+            map[org_id] = org_rates
+
+        return map
+
+    def _get_rate(self, row: Series, period_type: str) -> List[Dict]:
+        """
+        Converts that given `row` into a list of number of therapist dictionary.
+
+        Row is defined by:
+        ```
+        [{period_start},{period_end},{org_id},{churn_rate},{retention_rate}]
+        ```
+        """
+
+        return [
+            {
+                'period_type': period_type,
+                'start_date': f'{row[0]}',
+                'end_date': f'{row[1]}',
+                'type': 'churn_rate',
+                'rate_value': float(row[3])
+            },
+            {
+                'period_type': period_type,
+                'start_date': f'{row[0]}',
+                'end_date': f'{row[1]}',
+                'type': 'retention_rate',
+                'rate_value': float(row[3])
             }
         ]
