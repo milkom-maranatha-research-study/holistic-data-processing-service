@@ -19,7 +19,7 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	@Override
 	public int run(String[] args) throws Exception {
 		Configuration config = new Configuration();
-		JobConf jobConf = new JobConf(config, ActiveTherapistAggregatorDriver.class);
+		JobConf jobConf = new JobConf(config, TherapistAggregatorDriver.class);
 
 		Path inputPath = new Path(args[0]);
     	FileInputFormat.setInputPaths(jobConf, inputPath);
@@ -35,7 +35,7 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	}
 	
 	private Job getJob(JobConf jobConfig, boolean isAggregateAll) throws IOException {
-		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Number of Therapists");
+		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Number of Therapists per Org");
 
 		job.setMapperClass(isAggregateAll ? AllTherapistTokenizerMapper.class : TherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);

@@ -40,7 +40,7 @@ public class ActiveTherapistAggregatorDriver extends Configured implements Tool 
 	}
 	
 	private Job getJob(JobConf jobConfig, boolean isAllTimeAggregate) throws IOException {
-		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Active/Inactive Therapists");
+		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Active/Inactive Therapists Per Org");
 
 		job.setMapperClass(isAllTimeAggregate ? AllActiveTherapistTokenizerMapper.class : ActiveTherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);
