@@ -7,23 +7,24 @@ from dateutil.relativedelta import relativedelta
 from pandas import DataFrame
 
 from data_processor.src.helpers import print_time_duration
-from data_processor.settings import configure_logging
 
 
 logger = logging.getLogger(__name__)
 
 
-ORG_AGG_ACTIVE_THERS_INPUT_PATH = 'output/org/active-ther-aggregate'
-ORG_AGG_WEEKLY_ACTIVE_THERS_FILENAME = 'org-active-ther-weekly-aggregate'
-ORG_AGG_MONTHLY_ACTIVE_THERS_FILENAME = 'org-active-ther-monthly-aggregate'
-ORG_AGG_YEARLY_ACTIVE_THERS_FILENAME = 'org-active-ther-yearly-aggregate'
+ORG_ACTIVE_THERS_INPUT_PATH = 'output/org/active-ther-aggregate'
+ORG_WEEKLY_ACTIVE_THERS_INPUT_FILENAME = 'org-active-ther-weekly-aggregate'
+ORG_MONTHLY_ACTIVE_THERS_INPUT_FILENAME = 'org-active-ther-monthly-aggregate'
+ORG_YEARLY_ACTIVE_THERS_INPUT_FILENAME = 'org-active-ther-yearly-aggregate'
 
-ORG_RATE_WEEKLY_INPUT_PATH = 'input/org-rate/weekly'
-ORG_RATE_WEEKLY_INPUT_FILENAME = 'input-rate-weekly-aggregate'
-ORG_RATE_MONTHLY_INPUT_PATH = 'input/org-rate/monthly'
-ORG_RATE_MONTHLY_INPUT_FILENAME = 'input-rate-monthly-aggregate'
-ORG_RATE_YEARLY_INPUT_PATH = 'input/org-rate/yearly'
-ORG_RATE_YEARLY_INPUT_FILENAME = 'input-rate-yearly-aggregate'
+ORG_WEEKLY_INPUT_RATE_OUTPUT_PATH = 'input/org-rate/weekly'
+ORG_WEEKLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-weekly'
+
+ORG_MONTHLY_INPUT_RATE_OUTPUT_PATH = 'input/org-rate/monthly'
+ORG_MONTHLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-monthly'
+
+ORG_YEARLY_INPUT_RATE_OUTPUT_PATH = 'input/org-rate/yearly'
+ORG_YEARLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-yearly'
 
 
 class OrgActiveTherProcessor:
@@ -109,7 +110,7 @@ class OrgWeeklyActiveTherProcessor(OrgActiveTherProcessor):
 
         # Step 1 - Load weekly active therapists
         dataframe = pd.read_csv(
-            f'{ORG_AGG_ACTIVE_THERS_INPUT_PATH}/{ORG_AGG_WEEKLY_ACTIVE_THERS_FILENAME}.csv',
+            f'{ORG_ACTIVE_THERS_INPUT_PATH}/{ORG_WEEKLY_ACTIVE_THERS_INPUT_FILENAME}.csv',
             sep='\t',
             names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
@@ -144,7 +145,7 @@ class OrgWeeklyActiveTherProcessor(OrgActiveTherProcessor):
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
         # Step 6 - Save results into CSV file
-        self._to_csv(dataframe, ORG_RATE_WEEKLY_INPUT_PATH, ORG_RATE_WEEKLY_INPUT_FILENAME)
+        self._to_csv(dataframe, ORG_WEEKLY_INPUT_RATE_OUTPUT_PATH, ORG_WEEKLY_INPUT_RATE_OUTPUT_FILENAME)
 
 
 class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
@@ -167,11 +168,11 @@ class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
         and writes the result into multiple CSV files.
         """
 
-        logger.info("Load monthly active therapists data from disk...")
+        logger.info("Load Organizations' monthly active therapists data from disk...")
 
         # Step 1 - Load Organizations' monthly active therapists
         dataframe = pd.read_csv(
-            f'{ORG_AGG_ACTIVE_THERS_INPUT_PATH}/{ORG_AGG_MONTHLY_ACTIVE_THERS_FILENAME}.csv',
+            f'{ORG_ACTIVE_THERS_INPUT_PATH}/{ORG_MONTHLY_ACTIVE_THERS_INPUT_FILENAME}.csv',
             sep='\t',
             names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
@@ -200,7 +201,7 @@ class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
         # Step 6 - Save results into CSV file
-        self._to_csv(dataframe, ORG_RATE_MONTHLY_INPUT_PATH, ORG_RATE_MONTHLY_INPUT_FILENAME)
+        self._to_csv(dataframe, ORG_MONTHLY_INPUT_RATE_OUTPUT_PATH, ORG_MONTHLY_INPUT_RATE_OUTPUT_FILENAME)
 
     def _generate_date_period(self, dataframe: DataFrame) -> DataFrame:
         """
@@ -244,7 +245,7 @@ class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
         # Step 1 - Load yearly active therapists
         logger.info("Load Organizations' yearly active therapists data from disk...")
         dataframe = pd.read_csv(
-            f'{ORG_AGG_ACTIVE_THERS_INPUT_PATH}/{ORG_AGG_YEARLY_ACTIVE_THERS_FILENAME}.csv',
+            f'{ORG_ACTIVE_THERS_INPUT_PATH}/{ORG_YEARLY_ACTIVE_THERS_INPUT_FILENAME}.csv',
             sep='\t',
             names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
@@ -273,7 +274,7 @@ class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
         # Step 6 - Save results into CSV file
-        self._to_csv(dataframe, ORG_RATE_YEARLY_INPUT_PATH, ORG_RATE_YEARLY_INPUT_FILENAME)
+        self._to_csv(dataframe, ORG_YEARLY_INPUT_RATE_OUTPUT_PATH, ORG_YEARLY_INPUT_RATE_OUTPUT_FILENAME)
 
     def _generate_date_period(self, dataframe: DataFrame) -> DataFrame:
         """
