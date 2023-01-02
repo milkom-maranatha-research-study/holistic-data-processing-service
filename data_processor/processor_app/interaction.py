@@ -20,8 +20,8 @@ AGG_NUM_OF_THERS_FILENAME = 'all-aggregate'
 AGG_NUM_OF_THERS_PER_ORG_FILENAME = 'per-org-aggregate'
 
 INPUT_INTERACTION_PATH = 'input/interaction'
-INPUT_APP_INTERACTION_PATH = 'input/interaction/app'
-INPUT_ORG_INTERACTION_PATH = 'input/interaction/org'
+INPUT_APP_INTERACTION_PATH = 'input/interaction/by-app'
+INPUT_ORG_INTERACTION_PATH = 'input/interaction/by-org'
 
 ALL_INTERACTION_FILENAME = 'all-interaction'
 APP_INTERACTION_FILENAME = 'app-interaction'
@@ -171,11 +171,11 @@ class InteractionFileExport:
 
         if period_type == 'alltime':
             self._all(dataframe)
+            return
+
+        if per_org:
+            self._per_org(dataframe, period_type)
         else:
-            if per_org:
-                self._per_org(dataframe, period_type)
-                return
-            
             self._per_app(dataframe, period_type)
 
     def _all(self, dataframe: dask_dataframe) -> None:
