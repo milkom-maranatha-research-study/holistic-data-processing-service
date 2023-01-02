@@ -23,19 +23,20 @@ from data_processor.src.clients.mappers import (
 logger = logging.getLogger(__name__)
 
 
-OUTPUT_ACTIVE_THER_PATH = 'output/active-ther'
+ORG_DIR = 'by-org'
 
-ORG_ACTIVE_THER_DIR = 'by-org'
+OUTPUT_ACTIVE_THER_PATH = 'output/active-ther'
 
 ALLTIME_ACTIVE_THER_FILENAME = 'active-ther-alltime-aggregate'
 WEEKLY_ACTIVE_THER_FILENAME = 'active-ther-weekly-aggregate'
 MONTHLY_ACTIVE_THER_FILENAME = 'active-ther-monthly-aggregate'
 YEARLY_ACTIVE_THER_FILENAME = 'active-ther-yearly-aggregate'
 
-ORG_RATE_OUTPUT_PATH = 'output/org/rate'
-ORG_WEEKLY_RATE_FILENAME = 'org-weekly-rate'
-ORG_MONTHLY_RATE_FILENAME = 'org-monthly-rate'
-ORG_YEARLY_RATE_FILENAME = 'org-yearly-rate'
+OUTPUT_RATE_PATH = 'output/rate'
+
+WEEKLY_RATE_FILENAME = 'output-weekly-rate'
+MONTHLY_RATE_FILENAME = 'output-monthly-rate'
+YEARLY_RATE_FILENAME = 'output-yearly-rate'
 
 
 class TherapistBackendOperation:
@@ -179,7 +180,7 @@ class TotalTherapistBackendOperation:
 
         logger.info("Importing weekly total therapists data from disk...")
 
-        path = f'{OUTPUT_ACTIVE_THER_PATH}/{ORG_ACTIVE_THER_DIR}/weekly'
+        path = f'{OUTPUT_ACTIVE_THER_PATH}/{ORG_DIR}/weekly'
 
         dataframe = pd.read_csv(
             f'{path}/{WEEKLY_ACTIVE_THER_FILENAME}.csv',
@@ -197,7 +198,7 @@ class TotalTherapistBackendOperation:
 
         logger.info("Importing monthly total therapists data from disk...")
 
-        path = f'{OUTPUT_ACTIVE_THER_PATH}/{ORG_ACTIVE_THER_DIR}/monthly'
+        path = f'{OUTPUT_ACTIVE_THER_PATH}/{ORG_DIR}/monthly'
 
         dataframe = pd.read_csv(
             f'{path}/{MONTHLY_ACTIVE_THER_FILENAME}.csv',
@@ -215,7 +216,7 @@ class TotalTherapistBackendOperation:
 
         logger.info("Importing yearly total therapists data from disk...")
 
-        path = f'{OUTPUT_ACTIVE_THER_PATH}/{ORG_ACTIVE_THER_DIR}/yearly'
+        path = f'{OUTPUT_ACTIVE_THER_PATH}/{ORG_DIR}/yearly'
 
         dataframe = pd.read_csv(
             f'{path}/{YEARLY_ACTIVE_THER_FILENAME}.csv',
@@ -318,8 +319,10 @@ class TherapistRateBackendOperation:
 
         logger.info("Importing weekly therapists' rates data from disk...")
 
+        path = f'{OUTPUT_RATE_PATH}/{ORG_DIR}/weekly'
+
         dataframe = pd.read_csv(
-            f'{ORG_RATE_OUTPUT_PATH}/{ORG_WEEKLY_RATE_FILENAME}.csv',
+            f'{path}/{WEEKLY_RATE_FILENAME}.csv',
             sep=',',
             header=None
         )
@@ -334,8 +337,10 @@ class TherapistRateBackendOperation:
 
         logger.info("Importing monthly therapists' rates data from disk...")
 
+        path = f'{OUTPUT_RATE_PATH}/{ORG_DIR}/monthly'
+
         dataframe = pd.read_csv(
-            f'{ORG_RATE_OUTPUT_PATH}/{ORG_MONTHLY_RATE_FILENAME}.csv',
+            f'{path}/{MONTHLY_RATE_FILENAME}.csv',
             sep=',',
             header=None
         )
@@ -350,8 +355,10 @@ class TherapistRateBackendOperation:
 
         logger.info("Importing yearly therapists' rates data from disk...")
 
+        path = f'{OUTPUT_RATE_PATH}/{ORG_DIR}/yearly'
+
         dataframe = pd.read_csv(
-            f'{ORG_RATE_OUTPUT_PATH}/{ORG_YEARLY_RATE_FILENAME}.csv',
+            f'{path}/{YEARLY_RATE_FILENAME}.csv',
             sep=',',
             header=None
         )
