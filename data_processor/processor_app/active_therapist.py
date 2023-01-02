@@ -12,19 +12,19 @@ from data_processor.src.helpers import print_time_duration
 logger = logging.getLogger(__name__)
 
 
-ORG_ACTIVE_THERS_INPUT_PATH = 'output/org/active-ther-aggregate'
-ORG_WEEKLY_ACTIVE_THERS_INPUT_FILENAME = 'org-active-ther-weekly-aggregate'
-ORG_MONTHLY_ACTIVE_THERS_INPUT_FILENAME = 'org-active-ther-monthly-aggregate'
-ORG_YEARLY_ACTIVE_THERS_INPUT_FILENAME = 'org-active-ther-yearly-aggregate'
+INPUT_ACTIVE_THER_PATH = 'output/active-ther'
+ORG_ACTIVE_THER_DIR = 'by-org'
 
-ORG_WEEKLY_INPUT_RATE_OUTPUT_PATH = 'input/org-rate/weekly'
-ORG_WEEKLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-weekly'
+WEEKLY_ACTIVE_THER_INPUT_FILENAME = 'active-ther-weekly-aggregate'
+MONTHLY_ACTIVE_THER_INPUT_FILENAME = 'active-ther-monthly-aggregate'
+YEARLY_ACTIVE_THER_INPUT_FILENAME = 'active-ther-yearly-aggregate'
 
-ORG_MONTHLY_INPUT_RATE_OUTPUT_PATH = 'input/org-rate/monthly'
-ORG_MONTHLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-monthly'
+INPUT_RATE_OUTPUT_PATH = 'input/rate'
+ORG_RATE_DIR = 'by-org'
 
-ORG_YEARLY_INPUT_RATE_OUTPUT_PATH = 'input/org-rate/yearly'
-ORG_YEARLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-yearly'
+WEEKLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-weekly'
+MONTHLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-monthly'
+YEARLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-yearly'
 
 
 class OrgActiveTherProcessor:
@@ -39,7 +39,13 @@ class OrgActiveTherProcessor:
         dfs = []
 
         for org_id in organization_ids:
-            org_df = dataframe[dataframe['organization_id'] == org_id]
+            # We use `.copy()` to avoid `SettingWithCopyWarning`.
+            # The warning arises because we make a subset of the main dataframe,
+            # but then we modify it immediately.
+            # The subset of the main dataframe is created using shallow copy.
+            # Therefore the warning tells us that the action might affecting the main
+            # dataframe and some inconsistency is expected to occur. 
+            org_df = dataframe[dataframe['organization_id'] == org_id].copy(deep=True)
 
             org_df[[
                 'active_ther_b_period', 'inactive_ther_b_period'
@@ -109,8 +115,10 @@ class OrgWeeklyActiveTherProcessor(OrgActiveTherProcessor):
         logger.info("Load Organizations' weekly active therapists data from disk...")
 
         # Step 1 - Load weekly active therapists
+        path = f'{INPUT_ACTIVE_THER_PATH}/{ORG_ACTIVE_THER_DIR}/weekly'
+
         dataframe = pd.read_csv(
-            f'{ORG_ACTIVE_THERS_INPUT_PATH}/{ORG_WEEKLY_ACTIVE_THERS_INPUT_FILENAME}.csv',
+            f'{path}/{WEEKLY_ACTIVE_THER_INPUT_FILENAME}.csv',
             sep='\t',
             names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
@@ -145,7 +153,8 @@ class OrgWeeklyActiveTherProcessor(OrgActiveTherProcessor):
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
         # Step 6 - Save results into CSV file
-        self._to_csv(dataframe, ORG_WEEKLY_INPUT_RATE_OUTPUT_PATH, ORG_WEEKLY_INPUT_RATE_OUTPUT_FILENAME)
+        output_path = f'{INPUT_RATE_OUTPUT_PATH}/{ORG_RATE_DIR}/weekly'
+        self._to_csv(dataframe, output_path, WEEKLY_INPUT_RATE_OUTPUT_FILENAME)
 
 
 class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
@@ -171,8 +180,10 @@ class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
         logger.info("Load Organizations' monthly active therapists data from disk...")
 
         # Step 1 - Load Organizations' monthly active therapists
+        path = f'{INPUT_ACTIVE_THER_PATH}/{ORG_ACTIVE_THER_DIR}/monthly'
+
         dataframe = pd.read_csv(
-            f'{ORG_ACTIVE_THERS_INPUT_PATH}/{ORG_MONTHLY_ACTIVE_THERS_INPUT_FILENAME}.csv',
+            f'{path}/{MONTHLY_ACTIVE_THER_INPUT_FILENAME}.csv',
             sep='\t',
             names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
@@ -201,7 +212,8 @@ class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
         # Step 6 - Save results into CSV file
-        self._to_csv(dataframe, ORG_MONTHLY_INPUT_RATE_OUTPUT_PATH, ORG_MONTHLY_INPUT_RATE_OUTPUT_FILENAME)
+        output_path = f'{INPUT_RATE_OUTPUT_PATH}/{ORG_RATE_DIR}/monthly'
+        self._to_csv(dataframe, output_path, MONTHLY_INPUT_RATE_OUTPUT_FILENAME)
 
     def _generate_date_period(self, dataframe: DataFrame) -> DataFrame:
         """
@@ -244,8 +256,10 @@ class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
 
         # Step 1 - Load yearly active therapists
         logger.info("Load Organizations' yearly active therapists data from disk...")
+        path = f'{INPUT_ACTIVE_THER_PATH}/{ORG_ACTIVE_THER_DIR}/yearly'
+
         dataframe = pd.read_csv(
-            f'{ORG_ACTIVE_THERS_INPUT_PATH}/{ORG_YEARLY_ACTIVE_THERS_INPUT_FILENAME}.csv',
+            f'{path}/{YEARLY_ACTIVE_THER_INPUT_FILENAME}.csv',
             sep='\t',
             names=['period', 'organization_id', 'active_ther', 'inactive_ther', 'total_ther'],
             dtype={
@@ -274,7 +288,8 @@ class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
         dataframe = self._calculate_num_of_thers_before_period(dataframe)
 
         # Step 6 - Save results into CSV file
-        self._to_csv(dataframe, ORG_YEARLY_INPUT_RATE_OUTPUT_PATH, ORG_YEARLY_INPUT_RATE_OUTPUT_FILENAME)
+        output_path = f'{INPUT_RATE_OUTPUT_PATH}/{ORG_RATE_DIR}/yearly'
+        self._to_csv(dataframe, output_path, YEARLY_INPUT_RATE_OUTPUT_FILENAME)
 
     def _generate_date_period(self, dataframe: DataFrame) -> DataFrame:
         """
