@@ -1,4 +1,4 @@
-package data.aggregator.app;
+package data.aggregator.app.bynd;
 
 import java.io.IOException;
 import java.util.HashMap;

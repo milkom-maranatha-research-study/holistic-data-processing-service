@@ -14,9 +14,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import data.aggregator.app.AllActiveTherapistSumReducer;
-import data.aggregator.app.AllActiveTherapistTokenizerMapper;
-
 
 /**
  * Data Processing Service (DPS) main class,

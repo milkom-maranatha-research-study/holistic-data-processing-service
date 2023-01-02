@@ -14,9 +14,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import data.aggregator.app.AllActiveTherapistSumReducer;
-import data.aggregator.app.AllActiveTherapistTokenizerMapper;
-
 
 /**
  * Data Processing Service (DPS) main class,
@@ -36,20 +33,19 @@ public class ActiveTherapistAggregatorDriver extends Configured implements Tool 
     	FileOutputFormat.setOutputPath(jobConf, outputPath);
 		outputPath.getFileSystem(config).delete(outputPath, true);
 
-		boolean isAllTimeAggregate = "alltime".equals(args[2]);
-		Job job = getJob(jobConf, isAllTimeAggregate);
+		Job job = getJob(jobConf);
 
 		return (job.waitForCompletion(true) ? 0 : 1);
 	}
 	
-	private Job getJob(JobConf jobConfig, boolean isAllTimeAggregate) throws IOException {
+	private Job getJob(JobConf jobConfig) throws IOException {
 		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Active/Inactive Therapists Per Org");
 
-		job.setMapperClass(isAllTimeAggregate ? AllActiveTherapistTokenizerMapper.class : ActiveTherapistTokenizerMapper.class);		
+		job.setMapperClass(ActiveTherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);
 		job.setMapOutputValueClass(IntWritable.class);
 
-		job.setReducerClass(isAllTimeAggregate ? AllActiveTherapistSumReducer.class : ActiveTherapistSumReducer.class);
+		job.setReducerClass(ActiveTherapistSumReducer.class);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(Text.class);
 

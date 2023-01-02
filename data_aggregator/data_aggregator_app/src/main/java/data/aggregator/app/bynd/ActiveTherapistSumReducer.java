@@ -23,7 +23,7 @@ public class ActiveTherapistSumReducer extends Reducer<Text, IntWritable, Text, 
 		// Get available keys
 		String[] keys = key.toString().split("\t");
 		
-		// New keys are defined by "{period},{totalThersInOrg}"
+		// New keys are defined by "{period},{totalThersInND}"
 		String strTotalTherFromKey = keys[1];
 
 		finalKey.set(String.format("%s", keys[0]));
