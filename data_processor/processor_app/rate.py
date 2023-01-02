@@ -288,7 +288,7 @@ class OrgYearlyActiveTherapistRate(ActiveTherapistRate):
         self._to_csv(dataframe, ORG_RATE_OUTPUT_PATH, ORG_YEARLY_RATE_OUTPUT_FILENAME)
 
 
-class OrganizationRate:
+class TherapistRate:
 
     def __init__(self) -> None:
         OrgWeeklyActiveTherProcessor()
@@ -303,4 +303,4 @@ class OrganizationRate:
 if __name__ == '__main__':
     configure_logging()
 
-    OrganizationRate()
+    TherapistRate()

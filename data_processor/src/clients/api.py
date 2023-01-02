@@ -197,41 +197,41 @@ class InteractionAPI(BackendAPIClient):
         self._download(self._BE_THER_INTERACTIONS_FILE, path=path, payload=payload)
 
 
-class NumOfTherapistAPI(BackendAPIClient):
+class TotalTherapistAPI(BackendAPIClient):
 
     def upsert(self, org_id: str, num_of_therapists: List[Dict]) -> Dict:
         """
-        Create or update number of therapists belonging to the Organization ID.
+        Create or update total therapists in the Organization ID.
         """
 
         method = 'POST'
-        path = f'/organizations/{org_id}/number-of-therapists/'
+        path = f'/organizations/{org_id}/total-therapists/'
 
         response = self._api_request(method, path, num_of_therapists)
 
         return response.json()
 
 
-class AllTimeNumOfTherapistAPI(BackendAPIClient):
+class TotalAllTherapistAPI(BackendAPIClient):
 
     def upsert(self, num_of_therapist: Dict) -> Dict:
         """
-        Create or update all-time number of therapists.
+        Create or update total all therapists.
         """
 
         method = 'POST'
-        path = '/number-of-therapists/all-time/'
+        path = '/total-therapists/all/'
 
         response = self._api_request(method, path, num_of_therapist)
 
         return response.json()
 
 
-class OrganizationRateAPI(BackendAPIClient):
+class TherapistRateAPI(BackendAPIClient):
 
     def upsert(self, org_id: str, rates: List[Dict]) -> Dict:
         """
-        Create or update organization rates belonging to the Organization ID.
+        Create or update therapists' rates in the Organization ID.
         """
 
         method = 'POST'

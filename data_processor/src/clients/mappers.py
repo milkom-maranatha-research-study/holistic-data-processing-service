@@ -6,11 +6,11 @@ from pandas import DataFrame, Series
 from typing import Dict, List
 
 
-class AllTimeNumOfTherapistMapper:
+class TotalAllTherapistMapper:
 
-    def to_num_of_thers_map(self, dataframe: DataFrame) -> Dict:
+    def to_total_thers_map(self, dataframe: DataFrame) -> Dict:
         """
-        Converts that given `dataframe` into the all-time number of therapists.
+        Converts that given `dataframe` into the all-time total therapists.
 
         Dataframe's row is defined by:
         ```
@@ -39,12 +39,12 @@ class AllTimeNumOfTherapistMapper:
         return num_of_thers
 
 
-class NumOfTherapistMapper:
+class TotalTherapistMapper:
 
-    def to_num_of_thers_map(self, dataframe: DataFrame, period_type: str) -> Dict:
+    def to_total_thers_map(self, dataframe: DataFrame, period_type: str) -> Dict:
         """
-        Converts that given `dataframe` into number of therapists
-        dictionary per organization for that specific `period_type`.
+        Converts that given `dataframe` into the total therapists
+        per organization dictionary for that specific `period_type`.
 
         Dataframe's row is defined by:
         ```
@@ -55,7 +55,7 @@ class NumOfTherapistMapper:
         for _, row in dataframe.iterrows():
 
             org_id = int(row[1])
-            org_num_of_thers = self._get_num_of_thers(row, period_type)
+            org_num_of_thers = self._get_total_thers(row, period_type)
 
             if map.get(org_id):
                 existing = map[org_id]
@@ -68,24 +68,24 @@ class NumOfTherapistMapper:
 
         return map
 
-    def _get_num_of_thers(self, row: Series, period_type: str) -> List[Dict]:
+    def _get_total_thers(self, row: Series, period_type: str) -> List[Dict]:
         """
-        Converts that given `row` into a list of number of therapist dictionary.
+        Converts that given `row` into a list of the total therapists dictionary.
         """
         if period_type == 'weekly':
-            return self._get_weekly_num_of_thers(row)
+            return self._get_weekly_total_thers(row)
 
         elif period_type == 'monthly':
-            return self._get_monthly_num_of_thers(row)
+            return self._get_monthly_total_thers(row)
 
         elif period_type == 'yearly':
-            return self._get_yearly_num_of_thers(row)
+            return self._get_yearly_total_thers(row)
 
         return []
 
-    def _get_weekly_num_of_thers(self, row: Series) -> List[Dict]:
+    def _get_weekly_total_thers(self, row: Series) -> List[Dict]:
         """
-        Converts that given `row` into a list of number of therapist dictionary.
+        Converts that given `row` into a list of the total therapists dictionary.
 
         Row is defined by:
         ```
@@ -113,9 +113,9 @@ class NumOfTherapistMapper:
             }
         ]
 
-    def _get_monthly_num_of_thers(self, row: Series) -> List[Dict]:
+    def _get_monthly_total_thers(self, row: Series) -> List[Dict]:
         """
-        Converts that given `row` into a list of number of therapist dictionary.
+        Converts that given `row` into a list of the total therapists dictionary.
 
         Row is defined by:
         ```
@@ -146,9 +146,9 @@ class NumOfTherapistMapper:
             }
         ]
 
-    def _get_yearly_num_of_thers(self, row: Series) -> List[Dict]:
+    def _get_yearly_total_thers(self, row: Series) -> List[Dict]:
         """
-        Converts that given `row` into a list of number of therapist dictionary.
+        Converts that given `row` into a list of the total therapists dictionary.
 
         Row is defined by:
         ```
@@ -181,11 +181,11 @@ class NumOfTherapistMapper:
         ]
 
 
-class OrganizationRateMapper:
+class TherapistRateMapper:
 
     def to_rates_map(self, dataframe: DataFrame, period_type: str) -> Dict:
         """
-        Converts that given `dataframe` into a map of the organization rates
+        Converts that given `dataframe` into a map of the therapists' rates
         based on that given `period_type`.
 
         Dataframe's row is defined by:
@@ -213,7 +213,7 @@ class OrganizationRateMapper:
 
     def _get_rate(self, row: Series, period_type: str) -> List[Dict]:
         """
-        Converts that given `row` into a list of number of therapist dictionary.
+        Converts that given `row` into a list of therapists' rates dictionary.
 
         Row is defined by:
         ```
