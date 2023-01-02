@@ -15,11 +15,16 @@ from data_processor.settings import configure_logging
 logger = logging.getLogger(__name__)
 
 
-AGG_ORG_NUM_OF_THERS_PATH = 'output/org/num-of-ther'
-AGG_ORG_NUM_OF_THERS_FILENAME = 'org-all-aggregate'
-AGG_ORG_NUM_OF_THERS_PER_ORG_FILENAME = 'org-per-org-aggregate'
+AGG_NUM_OF_THERS_PATH = 'output/num-of-ther'
+AGG_NUM_OF_THERS_FILENAME = 'all-aggregate'
+AGG_NUM_OF_THERS_PER_ORG_FILENAME = 'per-org-aggregate'
 
-ORG_INTERACTION_INPUT_PATH = 'input/org-interaction'
+INPUT_INTERACTION_PATH = 'input/interaction'
+INPUT_APP_INTERACTION_PATH = 'input/interaction/app'
+INPUT_ORG_INTERACTION_PATH = 'input/interaction/org'
+
+ALL_INTERACTION_FILENAME = 'all-interaction'
+APP_INTERACTION_FILENAME = 'app-interaction'
 ORG_INTERACTION_FILENAME = 'org-interaction'
 
 
@@ -28,6 +33,7 @@ class InteractionDataProcessor:
     def __init__(self) -> None:
         self.therapist_operation = TherapistBackendOperation()
         self.ther_interaction_operation = InteractionBackendOperation()
+        self.exporter = InteractionFileExport()
 
         # Runs data processor
         process_start_at = datetime.now()
@@ -76,21 +82,21 @@ class InteractionDataProcessor:
         # * in the same day, we only need to pick one.
         #
         # * It's sufficient (for now) to tells that therapist is active on that day.
-        logger.info("Distinct data by interaction date...")
+        logger.info("Distinct data by therapist and its interaction date...")
         cleaned_dataframe = dataframe.drop_duplicates(
             subset=['therapist_id', 'interaction_date'],
             keep='last'
         )
 
         # Step 4 - Merge Interaction data with the therapist data
-        # * 4.1 Merge all-time interaction dataframe with the all-time therapist dataframe
-        # *     to generate new columns called `all_time_period` and `all_time_thers`.
+        # * Merge the cleaned interaction dataframe with the all-time therapist dataframe
+        # * to generate new columns called `all_time_period` and `all_time_thers`.
         # *
-        # *     This is required by the aggregator service, so it can calculate
-        # *     the all-time number of active/inactive therapists in NiceDay.
-        logger.info("Merge all-time interaction dataframe with the number of therapists dataframe...")
+        # * This is required by the aggregator service, so it can calculate
+        # * the number of active/inactive therapists in one go.
+        logger.info("Merge the interaction dataframe with the all-time therapist dataframe...")
         num_of_thers_dataframe = dask_dataframe.read_csv(
-            f'{AGG_ORG_NUM_OF_THERS_PATH}/{AGG_ORG_NUM_OF_THERS_FILENAME}.csv',
+            f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_FILENAME}.csv',
             sep='\t',
             names=['all_time_period', 'all_time_thers'],
             dtype={
@@ -100,32 +106,9 @@ class InteractionDataProcessor:
         )
 
         head = num_of_thers_dataframe.head()
-        all_time_dataframe = cleaned_dataframe.assign(
+        merged_dataframe = cleaned_dataframe.assign(
             all_time_period=lambda _: head.iloc[0][0],
             all_time_thers=lambda _: head.iloc[0][1],
-        )
-
-        # * 4.2 Merge interaction dataframe with the number of therapists per org dataframe
-        # *     to generate a new column called `total_therapists_in_org`.
-        # *
-        # *     This is required by the aggregator service, so it can calculate
-        # *     the number of active/inactive therapists per org in one go.
-        logger.info("Merge interaction dataframe with the therapist dataframe...")
-        num_thers_per_org_dataframe = dask_dataframe.read_csv(
-            f'{AGG_ORG_NUM_OF_THERS_PATH}/{AGG_ORG_NUM_OF_THERS_PER_ORG_FILENAME}.csv',
-            sep='\t',
-            names=['period', 'organization_id', 'total_thers_in_org'],
-            dtype={
-                'period': 'str',
-                'organization_id': 'Int64',
-                'total_thers_in_org': 'Int64'
-            }
-        )[['organization_id', 'total_thers_in_org']]
-
-        merged_dataframe = cleaned_dataframe.merge(
-            num_thers_per_org_dataframe,
-            how='left',
-            on='organization_id'
         )
 
         # Step 5 - Generate period column
@@ -141,11 +124,11 @@ class InteractionDataProcessor:
             period=lambda x: x.interaction_date.dt.to_period('Y')
         )
 
-        # * Step 6 - Distinct interaction data by `therapist_id` and `period` columns.
+        # Step 6 - Distinct interaction data by `therapist_id` and `period` columns.
         # * We need this disctinction is required to remove duplicate therapists
         # * that are active within that period.
         logger.info("Distinct data by the 'therapist_id' and 'period' columns...")
-        all_time_dataframe = all_time_dataframe.drop_duplicates(
+        all_time_dataframe = merged_dataframe.drop_duplicates(
             subset=['therapist_id', 'all_time_period'],
             keep='last'
         )
@@ -162,35 +145,48 @@ class InteractionDataProcessor:
             keep='last'
         )
 
-        # * 7 - Save the final weekly dataframe into CSV
-        logger.info("Save Interaction data for all-time period into CSV files...")
-        self._to_csv(all_time_dataframe, 'alltime')
+        # 7 - Create input files with CSV format
+        self.exporter.to_csv(all_time_dataframe, 'alltime')
 
-        logger.info("Save Interaction data for weekly periods into CSV files...")
-        self._to_csv(weekly_dataframe, 'weekly')
+        self.exporter.to_csv(weekly_dataframe, period_type='weekly')
+        self.exporter.to_csv(monthly_dataframe, period_type='monthly')
+        self.exporter.to_csv(yearly_dataframe, period_type='yearly')
 
-        logger.info("Save Interaction data for monthly periods into CSV files...")
-        self._to_csv(monthly_dataframe, 'monthly')
+        self.exporter.to_csv(weekly_dataframe, period_type='weekly', per_org=True)
+        self.exporter.to_csv(monthly_dataframe, period_type='monthly', per_org=True)
+        self.exporter.to_csv(yearly_dataframe, period_type='yearly', per_org=True)
 
-        logger.info("Save Interaction data for yearly periods into CSV files...")
-        self._to_csv(yearly_dataframe, 'yearly')
 
-    def _to_csv(
+class InteractionFileExport:
+
+    def to_csv(
         self,
         dataframe: dask_dataframe,
-        period_type: str
+        period_type: str,
+        per_org: bool = False
     ) -> None:
         """
-        Slices and saves that `dataframe` into multiple CSV files.
+        Exports that `dataframe` into CSV files.
         """
-        # Check the input directory availability
-        is_exists = os.path.exists(ORG_INTERACTION_INPUT_PATH)
 
-        if not is_exists:
-            os.makedirs(ORG_INTERACTION_INPUT_PATH)
+        if period_type == 'alltime':
+            self._all(dataframe)
+        else:
+            if per_org:
+                self._per_org(dataframe, period_type)
+                return
+            
+            self._per_app(dataframe, period_type)
 
-        # Check the period directory availability
-        path = f'{ORG_INTERACTION_INPUT_PATH}/{period_type}'
+    def _all(self, dataframe: dask_dataframe) -> None:
+        """
+        Create input files from that `dataframe` with CSV format
+        for all-time period.
+        """
+        logger.info("Save Interaction data for all-time period into CSV files...")
+
+        # Check the period input directory availability
+        path = f'{INPUT_INTERACTION_PATH}/alltime'
 
         is_exists = os.path.exists(path)
 
@@ -201,18 +197,92 @@ class InteractionDataProcessor:
         dataframe = dataframe.repartition(npartitions=10)
 
         # Save and simplifies interaction dataframe
-        if period_type == 'alltime':
-            dataframe[['all_time_period', 'all_time_thers', 'therapist_id']].to_csv(
-                f'{path}/{ORG_INTERACTION_FILENAME}-part-*.csv',
-                index=False,
-                header=False
-            )
-        else:
-            dataframe[['period', 'organization_id', 'total_thers_in_org', 'therapist_id']].to_csv(
-                f'{path}/{ORG_INTERACTION_FILENAME}-part-*.csv',
-                index=False,
-                header=False
-            )
+        dataframe[['all_time_period', 'all_time_thers', 'therapist_id']].to_csv(
+            f'{path}/{ALL_INTERACTION_FILENAME}-part-*.csv',
+            index=False,
+            header=False
+        )
+
+    def _per_org(
+        self,
+        dataframe: dask_dataframe,
+        period_type: str
+    ) -> None:
+        """
+        Create input files per Organization from that `dataframe` with CSV format
+        for that speficic `period_type`.
+        """
+        # Additional Step - Merge interaction dataframe with the therapist per org dataframe
+        # * This is required by the aggregator service, so it can calculate
+        # * the number of active/inactive therapists per org in one go.
+
+        logger.info("Merge interaction dataframe with the therapist per org dataframe...")
+
+        num_thers_per_org_dataframe = dask_dataframe.read_csv(
+            f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_PER_ORG_FILENAME}.csv',
+            sep='\t',
+            names=['period', 'organization_id', 'total_thers_in_org'],
+            dtype={
+                'period': 'str',
+                'organization_id': 'Int64',
+                'total_thers_in_org': 'Int64'
+            }
+        )[['organization_id', 'total_thers_in_org']]
+
+        dataframe = dataframe.merge(
+            num_thers_per_org_dataframe,
+            how='left',
+            on='organization_id'
+        )
+
+        logger.info(f"Save Interaction data per Organization for {period_type} period into CSV files...")
+
+        # Create the period input directory if it doesn't exists
+        path = f'{INPUT_ORG_INTERACTION_PATH}/{period_type}'
+
+        is_exists = os.path.exists(path)
+
+        if not is_exists:
+            os.makedirs(path)
+
+        # Slice dataframe into 10 partitions
+        dataframe = dataframe.repartition(npartitions=10)
+
+        # Save and simplifies interaction dataframe
+        dataframe[['period', 'organization_id', 'total_thers_in_org', 'therapist_id']].to_csv(
+            f'{path}/{ORG_INTERACTION_FILENAME}-part-*.csv',
+            index=False,
+            header=False
+        )
+
+    def _per_app(
+        self,
+        dataframe: dask_dataframe,
+        period_type: str
+    ) -> None:
+        """
+        Create input files per NiceDay Application from that `dataframe` with CSV format
+        for that speficic `period_type`.
+        """
+        logger.info(f"Save Interaction data per App for {period_type} period into CSV files...")
+
+        # Create the period input directory if it doesn't exists
+        path = f'{INPUT_APP_INTERACTION_PATH}/{period_type}'
+
+        is_exists = os.path.exists(path)
+
+        if not is_exists:
+            os.makedirs(path)
+
+        # Slice dataframe into 10 partitions
+        dataframe = dataframe.repartition(npartitions=10)
+
+        # Save and simplifies interaction dataframe
+        dataframe[['period', 'all_time_thers', 'therapist_id']].to_csv(
+            f'{path}/{APP_INTERACTION_FILENAME}-part-*.csv',
+            index=False,
+            header=False
+        )
 
 
 if __name__ == '__main__':

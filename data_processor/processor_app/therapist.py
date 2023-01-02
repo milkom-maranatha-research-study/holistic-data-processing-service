@@ -58,12 +58,12 @@ class TherapistDataProcessor:
             all_time_period=lambda _: f"{min_date}/{max_date}"
         )
 
-        # Step 4 - Save results into CSV files
+        # Step 4 - Create input files with CSV format
         self._to_csv(cleaned_dataframe)
 
     def _to_csv(self, dataframe: dask_dataframe) -> None:
         """
-        Saves that `dataframe` into CSV files.
+        Create input files from that `dataframe` with CSV format.
         """
         is_exists = os.path.exists(THERAPIST_INPUT_PATH)
 
