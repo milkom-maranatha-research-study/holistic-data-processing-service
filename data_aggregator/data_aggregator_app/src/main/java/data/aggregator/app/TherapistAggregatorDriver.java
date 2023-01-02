@@ -1,4 +1,4 @@
-package data.aggregator.app.bynd;
+package data.aggregator.app;
 
 import java.io.IOException;
 
@@ -13,9 +13,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-
-import data.aggregator.app.AllTherapistSumReducer;
-import data.aggregator.app.AllTherapistTokenizerMapper;
 
 public class TherapistAggregatorDriver extends Configured implements Tool {
 
@@ -38,7 +35,7 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	}
 	
 	private Job getJob(JobConf jobConfig, boolean isAggregateAll) throws IOException {
-		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Number of Therapists in NiceDay");
+		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Number of Therapists per Org");
 
 		job.setMapperClass(isAggregateAll ? AllTherapistTokenizerMapper.class : TherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);
