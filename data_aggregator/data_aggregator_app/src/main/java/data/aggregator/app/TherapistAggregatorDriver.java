@@ -35,7 +35,15 @@ public class TherapistAggregatorDriver extends Configured implements Tool {
 	}
 	
 	private Job getJob(JobConf jobConfig, boolean isAggregateAll) throws IOException {
-		Job job = Job.getInstance(jobConfig, "MR Job - Aggregate Number of Therapists per Org");
+		String jobName = "MR Job - Aggregate Number of Therapists";
+		
+		if (isAggregateAll) {
+			jobName += " in NiceDay";
+		} else {
+			jobName += " per Organization";
+		}
+
+		Job job = Job.getInstance(jobConfig, jobName);
 
 		job.setMapperClass(isAggregateAll ? AllTherapistTokenizerMapper.class : TherapistTokenizerMapper.class);		
 		job.setMapOutputKeyClass(Text.class);

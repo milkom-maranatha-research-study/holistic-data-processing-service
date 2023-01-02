@@ -16,16 +16,16 @@ function prepare_therapist_hadoop_requirements {
     docker cp data_aggregator_app.jar namenode:/tmp
 
     echo "Copy ${PERIOD_TYPE} input files into the 'tmp' dir in the 'namenode' service..."
-    INPUT_ORG_THERAPIST_PATH="input/org-therapist"
-    INPUT_NAMENODE_ORG_THERAPIST_PATH="tmp/org-therapist"
+    INPUT_THERAPIST_PATH="input/therapist"
+    INPUT_NAMENODE_THERAPIST_PATH="tmp/therapist"
 
-    docker cp "${INPUT_ORG_THERAPIST_PATH}" namenode:/"${INPUT_NAMENODE_ORG_THERAPIST_PATH}/"
+    docker cp "${INPUT_THERAPIST_PATH}" namenode:/"${INPUT_NAMENODE_THERAPIST_PATH}/"
 
     echo "Create HDFS 'input' dir in the 'namenode' service"
     docker exec -it namenode bash hdfs dfs -mkdir /user/root/input
 
-    echo "Copy '${INPUT_NAMENODE_ORG_THERAPIST_PATH}' files to the HDFS input dir..."
-    docker exec -it namenode bash hdfs dfs -put "${INPUT_NAMENODE_ORG_THERAPIST_PATH}" /user/root/input
+    echo "Copy '${INPUT_NAMENODE_THERAPIST_PATH}' files to the HDFS input dir..."
+    docker exec -it namenode bash hdfs dfs -put "${INPUT_NAMENODE_THERAPIST_PATH}" /user/root/input
 }
 
 
@@ -39,15 +39,15 @@ function run_therapist_aggregator {
     fi
 
     echo "Run MR Job..."
-    INPUT_PATH="input/org-therapist/"
-    OUTPUT_PATH="output/org-therapist/"
-    AGG_JAVA_CLASS="data.aggregator.app.byorg.TherapistAggregatorDriver"
+    INPUT_PATH="input/therapist/"
+    OUTPUT_PATH="output/therapist/"
+    AGG_JAVA_CLASS="data.aggregator.app.TherapistAggregatorDriver"
 
     docker exec -it namenode hadoop jar tmp/data_aggregator_app.jar "${AGG_JAVA_CLASS}" "${INPUT_PATH}" "${OUTPUT_PATH}" "${AGGREGATE_TYPE}"
 
     echo "Export MR Job outputs..."
-    OUTPUT_AGGREGATE_PATH="output/org/num-of-ther"
-    OUTPUT_AGGREGATE_FILENAME="org-${AGGREGATE_TYPE}-aggregate.csv"
+    OUTPUT_AGGREGATE_PATH="output/num-of-ther"
+    OUTPUT_AGGREGATE_FILENAME="${AGGREGATE_TYPE}-aggregate.csv"
 
     # Create 'output' directory if it doesn't exists
     mkdir -p "${OUTPUT_AGGREGATE_PATH}"
@@ -65,11 +65,11 @@ function cleanup_therapist_aggregator {
     docker exec -it namenode bash hdfs dfs -rm -r /user/root/output
 
     echo "Clean up 'namenode' output file..."
-    NAMENODE_OUTPUT_FILENAME="org-${AGGREGATE_TYPE}-aggregate.csv"
+    NAMENODE_OUTPUT_FILENAME="${AGGREGATE_TYPE}-aggregate.csv"
     docker exec -it namenode rm -f "${NAMENODE_OUTPUT_FILENAME}"
 
     echo "Clean up 'tmp' files..."
-    NAMENODE_TMP_INPUT_PATH="/tmp/org-therapist"
+    NAMENODE_TMP_INPUT_PATH="/tmp/therapist"
     docker exec -it namenode rm -rf "${NAMENODE_TMP_INPUT_PATH}"
     docker exec -it namenode rm -f /tmp/data_aggregator_app.jar
 }
