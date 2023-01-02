@@ -10,7 +10,6 @@ if [[ $TYPE =~ ^(locally)$ ]]; then
     export BACKEND_URL=http://localhost:8080
 
     # Registers data processing service module to the python path
-
     export PYTHONPATH="${PYTHONPATH}:${PWD}"
 fi
 
