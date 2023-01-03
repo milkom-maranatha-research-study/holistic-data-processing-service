@@ -46,16 +46,16 @@ class TherapistDataProcessor:
         # * Delete rows that doesn't have the Organization ID
         # * For now, we consider those rows as dirty data,
         # * We assume every therapist must be a member of the Organization.
-        cleaned_dataframe = dataframe.dropna(subset=['organization_id'])
+        dataframe = dataframe.dropna(subset=['organization_id'])
 
         # Step 3 - Generate all-time period column
         df_min_obj, df_max_obj = dask_dataframe.compute(
-            cleaned_dataframe[['date_joined']].min(),
-            cleaned_dataframe[['date_joined']].max()
+            dataframe[['date_joined']].min(),
+            dataframe[['date_joined']].max()
         )
         min_date = df_min_obj['date_joined'].to_pydatetime().strftime('%Y-%m-%d')
         max_date = df_max_obj['date_joined'].to_pydatetime().strftime('%Y-%m-%d')
-        cleaned_dataframe = cleaned_dataframe.assign(
+        dataframe = dataframe.assign(
             all_time_period=lambda _: f"{min_date}/{max_date}"
         )
 

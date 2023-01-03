@@ -83,7 +83,7 @@ class InteractionDataProcessor:
         #
         # * It's sufficient (for now) to tells that therapist is active on that day.
         logger.info("Distinct data by therapist and its interaction date...")
-        cleaned_dataframe = dataframe.drop_duplicates(
+        dataframe = dataframe.drop_duplicates(
             subset=['therapist_id', 'interaction_date'],
             keep='last'
         )
@@ -106,7 +106,7 @@ class InteractionDataProcessor:
         )
 
         head = num_of_thers_dataframe.head()
-        merged_dataframe = cleaned_dataframe.assign(
+        dataframe = dataframe.assign(
             all_time_period=lambda _: head.iloc[0][0],
             all_time_thers=lambda _: head.iloc[0][1],
         )
@@ -114,13 +114,13 @@ class InteractionDataProcessor:
         # Step 5 - Generate period column
         # * Value of the `period` column is generated based on the `interaction_date`.
         logger.info("Generate 'period' column based on the period type and 'interaction_date'...")
-        weekly_dataframe = merged_dataframe.assign(
+        weekly_dataframe = dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('W')
         )
-        monthly_dataframe = merged_dataframe.assign(
+        monthly_dataframe = dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('M')
         )
-        yearly_dataframe = merged_dataframe.assign(
+        yearly_dataframe = dataframe.assign(
             period=lambda x: x.interaction_date.dt.to_period('Y')
         )
 
@@ -128,7 +128,7 @@ class InteractionDataProcessor:
         # * We need this disctinction is required to remove duplicate therapists
         # * that are active within that period.
         logger.info("Distinct data by the 'therapist_id' and 'period' columns...")
-        all_time_dataframe = merged_dataframe.drop_duplicates(
+        all_time_dataframe = dataframe.drop_duplicates(
             subset=['therapist_id', 'all_time_period'],
             keep='last'
         )
