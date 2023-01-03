@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 ORG_DIR = 'by-org'
+APP_DIR = 'by-app'
 
 OUTPUT_ACTIVE_THER_PATH = 'output/active-ther'
 
@@ -136,46 +137,80 @@ class TotalTherapistBackendOperation:
         Synchronize every total therapists in the Organization
         back to the Backend service.
         """
-        self._sync_back_weekly_data()
-        self._sync_back_monthly_data()
-        self._sync_back_yearly_data()
+        self._sync_back_org_weekly_data()
+        self._sync_back_org_monthly_data()
+        self._sync_back_org_yearly_data()
 
-    def _sync_back_weekly_data(self) -> None:
+        self._sync_back_nd_weekly_data()
+        self._sync_back_nd_monthly_data()
+        self._sync_back_nd_yearly_data()
+
+    def _sync_back_org_weekly_data(self) -> None:
         """
         Synchronize weekly total therapists in the Organization
         back to the Backend service.
         """
 
-        num_of_thers_map = self._get_weekly_therapists_map()
+        total_thers_map = self._get_org_weekly_therapists_map()
 
-        for org_id, num_of_thers in num_of_thers_map.items():
+        for org_id, num_of_thers in total_thers_map.items():
             self.api.upsert(org_id, num_of_thers)
 
-    def _sync_back_monthly_data(self) -> None:
+    def _sync_back_org_monthly_data(self) -> None:
         """
         Synchronize monthly total therapists in the Organization
         back to the Backend service.
         """
 
-        num_of_thers_map = self._get_monthly_therapists_map()
+        total_thers_map = self._get_org_monthly_therapists_map()
 
-        for org_id, num_of_thers in num_of_thers_map.items():
+        for org_id, num_of_thers in total_thers_map.items():
             self.api.upsert(org_id, num_of_thers)
 
-    def _sync_back_yearly_data(self) -> None:
+    def _sync_back_org_yearly_data(self) -> None:
         """
         Synchronize yearly total therapists in the Organization
         back to the Backend service.
         """
 
-        num_of_thers_map = self._get_yearly_therapists_map()
+        total_thers_map = self._get_org_yearly_therapists_map()
 
-        for org_id, num_of_thers in num_of_thers_map.items():
+        for org_id, num_of_thers in total_thers_map.items():
             self.api.upsert(org_id, num_of_thers)
 
-    def _get_weekly_therapists_map(self) -> Dict:
+    def _sync_back_nd_weekly_data(self) -> None:
         """
-        Returns map of total therapists in the Organization.
+        Synchronize weekly total therapists in NiceDay
+        back to the Backend service.
+        """
+
+        total_thers = self._get_nd_weekly_therapists()
+
+        # TODO
+
+    def _sync_back_nd_monthly_data(self) -> None:
+        """
+        Synchronize monthly total therapists in NiceDay
+        back to the Backend service.
+        """
+
+        total_thers = self._get_nd_monthly_therapists()
+
+        # TODO
+
+    def _sync_back_nd_yearly_data(self) -> None:
+        """
+        Synchronize yearly total therapists in NiceDay
+        back to the Backend service.
+        """
+
+        total_thers = self._get_nd_yearly_therapists()
+
+        # TODO
+
+    def _get_org_weekly_therapists_map(self) -> Dict:
+        """
+        Returns map of weekly total therapists in the Organization.
         """
 
         logger.info("Importing weekly total therapists data from disk...")
@@ -189,11 +224,11 @@ class TotalTherapistBackendOperation:
         )
 
         logger.info("Converting weekly total therapist objects into a dictionary...")
-        return self.mapper.to_total_thers_map(dataframe, 'weekly')
+        return self.mapper.to_org_total_thers_map(dataframe, 'weekly')
 
-    def _get_monthly_therapists_map(self) -> Dict:
+    def _get_org_monthly_therapists_map(self) -> Dict:
         """
-        Returns map of montly total therapists in the Organization.
+        Returns map of monthly total therapists in the Organization.
         """
 
         logger.info("Importing monthly total therapists data from disk...")
@@ -207,9 +242,9 @@ class TotalTherapistBackendOperation:
         )
 
         logger.info("Converting monthly total therapist objects into a dictionary...")
-        return self.mapper.to_total_thers_map(dataframe, 'monthly')
+        return self.mapper.to_org_total_thers_map(dataframe, 'monthly')
 
-    def _get_yearly_therapists_map(self) -> Dict:
+    def _get_org_yearly_therapists_map(self) -> Dict:
         """
         Returns map of yearly total therapists in the Organization.
         """
@@ -225,7 +260,61 @@ class TotalTherapistBackendOperation:
         )
 
         logger.info("Converting yearly total therapist objects into a dictionary...")
-        return self.mapper.to_total_thers_map(dataframe, 'yearly')
+        return self.mapper.to_org_total_thers_map(dataframe, 'yearly')
+
+    def _get_nd_weekly_therapists(self) -> Dict:
+        """
+        Returns a list of weekly total therapists in NiceDay.
+        """
+
+        logger.info("Importing weekly total therapists data from disk...")
+
+        path = f'{OUTPUT_ACTIVE_THER_PATH}/{APP_DIR}/weekly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{WEEKLY_ACTIVE_THER_FILENAME}.csv',
+            sep='\t',
+            header=None
+        )
+
+        logger.info("Converting weekly total therapist objects into a dictionary...")
+        return self.mapper.to_nd_total_thers(dataframe, 'weekly')
+
+    def _get_nd_monthly_therapists(self) -> Dict:
+        """
+        Returns a list of monthly total therapists in NiceDay.
+        """
+
+        logger.info("Importing monthly total therapists data from disk...")
+
+        path = f'{OUTPUT_ACTIVE_THER_PATH}/{APP_DIR}/monthly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{MONTHLY_ACTIVE_THER_FILENAME}.csv',
+            sep='\t',
+            header=None
+        )
+
+        logger.info("Converting monthly total therapist objects into a dictionary...")
+        return self.mapper.to_nd_total_thers(dataframe, 'monthly')
+
+    def _get_nd_yearly_therapists(self) -> Dict:
+        """
+        Returns a list of yearly total therapists in NiceDay.
+        """
+
+        logger.info("Importing yearly total therapists data from disk...")
+
+        path = f'{OUTPUT_ACTIVE_THER_PATH}/{APP_DIR}/yearly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{YEARLY_ACTIVE_THER_FILENAME}.csv',
+            sep='\t',
+            header=None
+        )
+
+        logger.info("Converting yearly total therapist objects into a dictionary...")
+        return self.mapper.to_nd_total_thers(dataframe, 'yearly')
 
 
 class TotalAllTherapistBackendOperation:
@@ -275,44 +364,78 @@ class TherapistRateBackendOperation:
         Synchronize every therapists' rates in the Organization
         back to the Backend service.
         """
-        self._sync_back_weekly_data()
-        self._sync_back_monthly_data()
-        self._sync_back_yearly_data()
+        self._sync_back_org_weekly_data()
+        self._sync_back_org_monthly_data()
+        self._sync_back_org_yearly_data()
 
-    def _sync_back_weekly_data(self) -> None:
+        self._sync_back_nd_weekly_data()
+        self._sync_back_nd_monthly_data()
+        self._sync_back_nd_yearly_data()
+
+    def _sync_back_org_weekly_data(self) -> None:
         """
         Synchronize weekly therapists' rates in the Organization
         back to the Backend service.
         """
 
-        rates_map = self._get_weekly_rates_map()
+        rates_map = self._get_org_weekly_rates_map()
 
         for org_id, rates in rates_map.items():
             self.api.upsert(org_id, rates)
 
-    def _sync_back_monthly_data(self) -> None:
+    def _sync_back_org_monthly_data(self) -> None:
         """
         Synchronize monthly therapists' rates in the Organization
         back to the Backend service.
         """
 
-        rates_map = self._get_monthly_rates_map()
+        rates_map = self._get_org_monthly_rates_map()
 
         for org_id, rates in rates_map.items():
             self.api.upsert(org_id, rates)
 
-    def _sync_back_yearly_data(self) -> None:
+    def _sync_back_org_yearly_data(self) -> None:
         """
         Synchronize yearly therapists' rates in the Organization
         back to the Backend service.
         """
 
-        rates_map = self._get_yearly_rates_map()
+        rates_map = self._get_org_yearly_rates_map()
 
         for org_id, rates in rates_map.items():
             self.api.upsert(org_id, rates)
 
-    def _get_weekly_rates_map(self) -> Dict:
+    def _sync_back_nd_weekly_data(self) -> None:
+        """
+        Synchronize weekly therapists' rates in NiceDay
+        back to the Backend service.
+        """
+
+        rates = self._get_nd_weekly_rates()
+
+        # TODO
+
+    def _sync_back_nd_monthly_data(self) -> None:
+        """
+        Synchronize monthly therapists' rates in NiceDay
+        back to the Backend service.
+        """
+
+        rates = self._get_nd_monthly_rates()
+
+        # TODO
+
+    def _sync_back_nd_yearly_data(self) -> None:
+        """
+        Synchronize yearly therapists' rates in NiceDay
+        back to the Backend service.
+        """
+
+        rates = self._get_nd_yearly_rates()
+
+        # TODO
+
+    def _get_org_weekly_rates_map(self) -> Dict:
         """
         Returns map of weekly therapists' rates in the Organization.
         """
@@ -328,9 +451,9 @@ class TherapistRateBackendOperation:
         )
 
         logger.info("Converting weekly therapist's rate objects into a dictionary...")
-        return self.mapper.to_rates_map(dataframe, 'weekly')
+        return self.mapper.to_org_rates_map(dataframe, 'weekly')
 
-    def _get_monthly_rates_map(self) -> Dict:
+    def _get_org_monthly_rates_map(self) -> Dict:
         """
         Returns map of weekly therapists' rates in the Organization.
         """
@@ -346,9 +469,9 @@ class TherapistRateBackendOperation:
         )
 
         logger.info("Converting monthly therapist's rate objects into a dictionary...")
-        return self.mapper.to_rates_map(dataframe, 'monthly')
+        return self.mapper.to_org_rates_map(dataframe, 'monthly')
 
-    def _get_yearly_rates_map(self) -> Dict:
+    def _get_org_yearly_rates_map(self) -> Dict:
         """
         Returns map of yearly therapists' rates in the Organization.
         """
@@ -364,4 +487,58 @@ class TherapistRateBackendOperation:
         )
 
         logger.info("Converting yearly therapist's objects into a dictionary...")
-        return self.mapper.to_rates_map(dataframe, 'yearly')
+        return self.mapper.to_org_rates_map(dataframe, 'yearly')
+
+    def _get_nd_weekly_rates(self) -> Dict:
+        """
+        Returns a list of weekly therapists' rates in NiceDay.
+        """
+
+        logger.info("Importing weekly therapists' rates data from disk...")
+
+        path = f'{OUTPUT_RATE_PATH}/{APP_DIR}/weekly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{WEEKLY_RATE_FILENAME}.csv',
+            sep=',',
+            header=None
+        )
+
+        logger.info("Converting weekly therapist's rate objects into a dictionary...")
+        return self.mapper.to_nd_rates(dataframe, 'weekly')
+
+    def _get_nd_monthly_rates(self) -> Dict:
+        """
+        Returns a list of monthly therapists' rates in NiceDay.
+        """
+
+        logger.info("Importing monthly therapists' rates data from disk...")
+
+        path = f'{OUTPUT_RATE_PATH}/{APP_DIR}/monthly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{MONTHLY_RATE_FILENAME}.csv',
+            sep=',',
+            header=None
+        )
+
+        logger.info("Converting monthly therapist's rate objects into a dictionary...")
+        return self.mapper.to_nd_rates(dataframe, 'monthly')
+
+    def _get_nd_yearly_rates(self) -> Dict:
+        """
+        Returns a list of yearly therapists' rates in NiceDay.
+        """
+
+        logger.info("Importing yearly therapists' rates data from disk...")
+
+        path = f'{OUTPUT_RATE_PATH}/{APP_DIR}/yearly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{YEARLY_RATE_FILENAME}.csv',
+            sep=',',
+            header=None
+        )
+
+        logger.info("Converting yearly therapist's objects into a dictionary...")
+        return self.mapper.to_nd_rates(dataframe, 'yearly')
