@@ -346,15 +346,15 @@ class NDWeeklyActiveTherapistRate(ActiveTherapistRate):
 
         process_end_at = datetime.now()
 
-        tag = "Calculating weekly rate of the active therapists per Organization"
+        tag = "Calculating weekly rate of the active therapists in NiceDay"
         print_time_duration(tag, process_start_at, process_end_at)
 
     def _calculate(self) -> None:
         """
-        Calculate rate of the active therapists per Organization
+        Calculate rate of the active therapists in NiceDay
         and writes the result into CSV file.
         """
-        logger.info("Load input of weekly active therapists per Organization from disk...")
+        logger.info("Load input of weekly active therapists in NiceDay from disk...")
 
         # Step 1 - Load input of weekly active therapists
         path = f'{INPUT_RATE_PATH}/{APP_RATE_DIR}/weekly'
@@ -383,7 +383,7 @@ class NDWeeklyActiveTherapistRate(ActiveTherapistRate):
             parse_dates=['period_start', 'period_end']
         )
 
-        logger.info("Calculating weekly rate of the active therapists per Organization...")
+        logger.info("Calculating weekly rate of the active therapists in NiceDay...")
 
         # Step 1 - Generate `churn_rate` column
         dataframe['churn_rate'] = dataframe.apply(
@@ -432,15 +432,15 @@ class NDMonthlyActiveTherapistRate(ActiveTherapistRate):
 
         process_end_at = datetime.now()
 
-        tag = "Calculating monthly rate of the active therapists per Organization"
+        tag = "Calculating monthly rate of the active therapists in NiceDay"
         print_time_duration(tag, process_start_at, process_end_at)
 
     def _calculate(self) -> None:
         """
-        Calculate rate of the active therapists per Organization
+        Calculate rate of the active therapists in NiceDay
         and writes the result into CSV file.
         """
-        logger.info("Load input of monthly active therapists per Organization from disk...")
+        logger.info("Load input of monthly active therapists in NiceDay from disk...")
 
         # Step 1 - Load input of monthly active therapists
         path = f'{INPUT_RATE_PATH}/{APP_RATE_DIR}/monthly'
@@ -471,7 +471,7 @@ class NDMonthlyActiveTherapistRate(ActiveTherapistRate):
             parse_dates=['period_start', 'period_end']
         )
 
-        logger.info("Calculating monthly rate of the active therapists per Organization...")
+        logger.info("Calculating monthly rate of the active therapists in NiceDay...")
 
         # Step 1 - Generate `churn_rate` column
         dataframe['churn_rate'] = dataframe.apply(
@@ -520,15 +520,15 @@ class NDYearlyActiveTherapistRate(ActiveTherapistRate):
 
         process_end_at = datetime.now()
 
-        tag = "Calculating yearly rate of the active therapists per Organization"
+        tag = "Calculating yearly rate of the active therapists in NiceDay"
         print_time_duration(tag, process_start_at, process_end_at)
 
     def _calculate(self) -> None:
         """
-        Calculate rate of the active therapists per Organization
+        Calculate rate of the active therapists in NiceDay
         and writes the result into CSV file.
         """
-        logger.info("Load input of yearly active therapists per Organization from disk...")
+        logger.info("Load input of yearly active therapists in NiceDay from disk...")
 
         # Step 1 - Load input of yearly active therapists
         path = f'{INPUT_RATE_PATH}/{APP_RATE_DIR}/yearly'
@@ -559,7 +559,7 @@ class NDYearlyActiveTherapistRate(ActiveTherapistRate):
             parse_dates=['period_start', 'period_end']
         )
 
-        logger.info("Calculating monthly rate of the active therapists per Organization...")
+        logger.info("Calculating yearly rate of the active therapists in NiceDay...")
 
         # Step 1 - Generate `churn_rate` column
         dataframe['churn_rate'] = dataframe.apply(
