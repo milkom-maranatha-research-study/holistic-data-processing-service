@@ -6,9 +6,7 @@ from datetime import datetime
 from pandas import DataFrame
 
 from data_processor.processor_app.active_therapist import (
-    OrgWeeklyActiveTherProcessor,
-    OrgMonthlyActiveTherProcessor,
-    OrgYearlyActiveTherProcessor,
+    ActiveTherapistProcessor,
 )
 from data_processor.src.helpers import print_time_duration
 from data_processor.settings import configure_logging
@@ -303,7 +301,7 @@ class TherapistRateProcessor:
         # Runs data processor
         process_start_at = datetime.now()
 
-        self._run_active_therapist_processor()
+        ActiveTherapistProcessor()
 
         OrgWeeklyActiveTherapistRate()
         OrgMonthlyActiveTherapistRate()
@@ -311,14 +309,6 @@ class TherapistRateProcessor:
 
         process_end_at = datetime.now()
         print_time_duration("Therapists' rates data processing", process_start_at, process_end_at)
-
-    def _run_active_therapist_processor(self):
-        """
-        Run the active therapist data processor.
-        """
-        OrgWeeklyActiveTherProcessor()
-        OrgMonthlyActiveTherProcessor()
-        OrgYearlyActiveTherProcessor()
 
 
 if __name__ == '__main__':

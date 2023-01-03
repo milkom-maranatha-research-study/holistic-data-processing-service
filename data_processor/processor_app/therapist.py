@@ -41,6 +41,7 @@ class TherapistDataProcessor:
         dataframe = self.therapist_operation.data
 
         logger.info("Cleaning data...")
+
         # Step 2 - Clean Data
         # * Delete rows that doesn't have the Organization ID
         # * For now, we consider those rows as dirty data,
@@ -58,24 +59,19 @@ class TherapistDataProcessor:
             all_time_period=lambda _: f"{min_date}/{max_date}"
         )
 
-        # Step 4 - Create input files with CSV format
-        self._to_csv(cleaned_dataframe)
+        logger.info("Save Therapist data into CSV files...")
 
-    def _to_csv(self, dataframe: dask_dataframe) -> None:
-        """
-        Create input files from that `dataframe` with CSV format.
-        """
+        # Step 4 - Create input files with CSV format
+        # * Create output directory if it doesn't exists
         is_exists = os.path.exists(THERAPIST_INPUT_PATH)
 
         if not is_exists:
             os.makedirs(THERAPIST_INPUT_PATH)
 
-        # Slice dataframe into 10 partitions
+        # * Slice dataframe into 10 partitions
         dataframe = dataframe.repartition(npartitions=10)
 
-        # Save and simplifies therapist dataframe
-        logger.info("Save Therapist data into CSV files...")
-
+        # * Save and simplifies therapist dataframe
         dataframe[['all_time_period', 'organization_id', 'id']].to_csv(
             f'{THERAPIST_INPUT_PATH}/{THERAPIST_FILENAME}-part-*.csv',
             index=False,
