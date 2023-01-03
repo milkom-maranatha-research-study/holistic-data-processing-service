@@ -4,9 +4,6 @@ import pandas as pd
 
 from datetime import datetime
 
-from data_processor.processor_app.active_therapist import (
-    ActiveTherapistProcessor,
-)
 from data_processor.src.helpers import print_time_duration
 from data_processor.settings import configure_logging
 
@@ -605,8 +602,6 @@ class TherapistRateProcessor:
 
         # Runs data processor
         process_start_at = datetime.now()
-
-        ActiveTherapistProcessor()
 
         OrgWeeklyActiveTherapistRate()
         OrgMonthlyActiveTherapistRate()
