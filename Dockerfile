@@ -13,6 +13,3 @@ RUN pip install -r requirements.txt
 
 # Set Python PATH
 ENV PYTHONPATH "${PYTHONPATH}:/data-processing-service"
-
-RUN chmod a+x ./run_therapist_processor.sh
-RUN chmod a+x ./run_interaction_processor.sh
