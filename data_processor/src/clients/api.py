@@ -199,7 +199,19 @@ class InteractionAPI(BackendAPIClient):
 
 class TotalTherapistAPI(BackendAPIClient):
 
-    def upsert(self, org_id: str, num_of_therapists: List[Dict]) -> Dict:
+    def upsert(self, total_therapists: List[Dict]) -> Dict:
+        """
+        Create or update total therapists in NiceDay.
+        """
+
+        method = 'POST'
+        path = '/total-therapists/'
+
+        response = self._api_request(method, path, total_therapists)
+
+        return response.json()
+
+    def upsert_by_org(self, org_id: str, total_therapists: List[Dict]) -> Dict:
         """
         Create or update total therapists in the Organization ID.
         """
@@ -207,7 +219,7 @@ class TotalTherapistAPI(BackendAPIClient):
         method = 'POST'
         path = f'/organizations/{org_id}/total-therapists/'
 
-        response = self._api_request(method, path, num_of_therapists)
+        response = self._api_request(method, path, total_therapists)
 
         return response.json()
 
@@ -229,7 +241,19 @@ class TotalAllTherapistAPI(BackendAPIClient):
 
 class TherapistRateAPI(BackendAPIClient):
 
-    def upsert(self, org_id: str, rates: List[Dict]) -> Dict:
+    def upsert(self, rates: List[Dict]) -> Dict:
+        """
+        Create or update therapists' rates in NiceDay.
+        """
+
+        method = 'POST'
+        path = '/rates/'
+
+        response = self._api_request(method, path, rates)
+
+        return response.json()
+
+    def upsert_by_org(self, org_id: str, rates: List[Dict]) -> Dict:
         """
         Create or update therapists' rates in the Organization ID.
         """

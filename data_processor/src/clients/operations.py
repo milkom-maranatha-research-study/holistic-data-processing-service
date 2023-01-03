@@ -154,7 +154,7 @@ class TotalTherapistBackendOperation:
         total_thers_map = self._get_org_weekly_therapists_map()
 
         for org_id, num_of_thers in total_thers_map.items():
-            self.api.upsert(org_id, num_of_thers)
+            self.api.upsert_by_org(org_id, num_of_thers)
 
     def _sync_back_org_monthly_data(self) -> None:
         """
@@ -165,7 +165,7 @@ class TotalTherapistBackendOperation:
         total_thers_map = self._get_org_monthly_therapists_map()
 
         for org_id, num_of_thers in total_thers_map.items():
-            self.api.upsert(org_id, num_of_thers)
+            self.api.upsert_by_org(org_id, num_of_thers)
 
     def _sync_back_org_yearly_data(self) -> None:
         """
@@ -176,7 +176,7 @@ class TotalTherapistBackendOperation:
         total_thers_map = self._get_org_yearly_therapists_map()
 
         for org_id, num_of_thers in total_thers_map.items():
-            self.api.upsert(org_id, num_of_thers)
+            self.api.upsert_by_org(org_id, num_of_thers)
 
     def _sync_back_nd_weekly_data(self) -> None:
         """
@@ -185,8 +185,7 @@ class TotalTherapistBackendOperation:
         """
 
         total_thers = self._get_nd_weekly_therapists()
-
-        # TODO
+        self.api.upsert(total_thers)
 
     def _sync_back_nd_monthly_data(self) -> None:
         """
@@ -195,8 +194,7 @@ class TotalTherapistBackendOperation:
         """
 
         total_thers = self._get_nd_monthly_therapists()
-
-        # TODO
+        self.api.upsert(total_thers)
 
     def _sync_back_nd_yearly_data(self) -> None:
         """
@@ -205,8 +203,7 @@ class TotalTherapistBackendOperation:
         """
 
         total_thers = self._get_nd_yearly_therapists()
-
-        # TODO
+        self.api.upsert(total_thers)
 
     def _get_org_weekly_therapists_map(self) -> Dict:
         """
@@ -381,7 +378,7 @@ class TherapistRateBackendOperation:
         rates_map = self._get_org_weekly_rates_map()
 
         for org_id, rates in rates_map.items():
-            self.api.upsert(org_id, rates)
+            self.api.upsert_by_org(org_id, rates)
 
     def _sync_back_org_monthly_data(self) -> None:
         """
@@ -392,7 +389,7 @@ class TherapistRateBackendOperation:
         rates_map = self._get_org_monthly_rates_map()
 
         for org_id, rates in rates_map.items():
-            self.api.upsert(org_id, rates)
+            self.api.upsert_by_org(org_id, rates)
 
     def _sync_back_org_yearly_data(self) -> None:
         """
@@ -403,7 +400,7 @@ class TherapistRateBackendOperation:
         rates_map = self._get_org_yearly_rates_map()
 
         for org_id, rates in rates_map.items():
-            self.api.upsert(org_id, rates)
+            self.api.upsert_by_org(org_id, rates)
 
     def _sync_back_nd_weekly_data(self) -> None:
         """
@@ -412,8 +409,7 @@ class TherapistRateBackendOperation:
         """
 
         rates = self._get_nd_weekly_rates()
-
-        # TODO
+        self.api.upsert(rates)
 
     def _sync_back_nd_monthly_data(self) -> None:
         """
@@ -422,8 +418,7 @@ class TherapistRateBackendOperation:
         """
 
         rates = self._get_nd_monthly_rates()
-
-        # TODO
+        self.api.upsert(rates)
 
     def _sync_back_nd_yearly_data(self) -> None:
         """
@@ -432,8 +427,7 @@ class TherapistRateBackendOperation:
         """
 
         rates = self._get_nd_yearly_rates()
-
-        # TODO
+        self.api.upsert(rates)
 
     def _get_org_weekly_rates_map(self) -> Dict:
         """
