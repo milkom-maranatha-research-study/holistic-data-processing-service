@@ -3,7 +3,6 @@ import os
 import pandas as pd
 
 from datetime import datetime
-from pandas import DataFrame
 
 from data_processor.processor_app.active_therapist import (
     ActiveTherapistProcessor,
@@ -16,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 ORG_RATE_DIR = 'by-org'
+APP_RATE_DIR = 'by-app'
 
 INPUT_RATE_PATH = 'input/rate'
 
@@ -70,29 +70,6 @@ class ActiveTherapistRate:
 
         return round(rate, 2)
 
-    def _to_csv(self, dataframe: DataFrame, path: str, filename: str) -> None:
-        """
-        Saves that `dataframe` into CSV files.
-        """
-        is_exists = os.path.exists(path)
-
-        if not is_exists:
-            os.makedirs(path)
-
-        logger.info("Save Organizations' active therapists data into CSV file...")
-
-        dataframe[[
-            'period_start',
-            'period_end',
-            'organization_id',
-            'churn_rate',
-            'retention_rate',
-        ]].to_csv(
-            f'{path}/{filename}.csv',
-            index=False,
-            header=False
-        )
-
 
 class OrgWeeklyActiveTherapistRate(ActiveTherapistRate):
 
@@ -113,9 +90,9 @@ class OrgWeeklyActiveTherapistRate(ActiveTherapistRate):
         Calculate rate of the active therapists per Organization
         and writes the result into CSV file.
         """
-        logger.info("Load Organizations' weekly active therapists data from disk...")
+        logger.info("Load input of weekly active therapists per Organization from disk...")
 
-        # Step 1 - Load Organizations' weekly active therapists
+        # Step 1 - Load input of weekly active therapists
         path = f'{INPUT_RATE_PATH}/{ORG_RATE_DIR}/weekly'
 
         dataframe = pd.read_csv(
@@ -137,7 +114,9 @@ class OrgWeeklyActiveTherapistRate(ActiveTherapistRate):
                 'organization_id': 'Int64',
                 'active_ther': 'Int64',
                 'inactive_ther': 'Int64',
-                'total_ther': 'Int64'
+                'total_ther': 'Int64',
+                'active_ther_b_period': 'Int64',
+                'inactive_ther_b_period': 'Int64'
             },
             parse_dates=['period_start', 'period_end']
         )
@@ -156,9 +135,29 @@ class OrgWeeklyActiveTherapistRate(ActiveTherapistRate):
             axis=1
         )
 
+        logger.info("Save therapists' rates data into CSV file...")
+
         # Step 3 - Save results into CSV file
+        # * Create output directory if it doesn't exists
         output_path = f'{OUTPUT_RATE_PATH}/{ORG_RATE_DIR}/weekly'
-        self._to_csv(dataframe, output_path, WEEKLY_RATE_OUTPUT_FILENAME)
+
+        is_exists = os.path.exists(output_path)
+
+        if not is_exists:
+            os.makedirs(output_path)
+
+        # * Export dataframe to CSV file
+        dataframe[[
+            'period_start',
+            'period_end',
+            'organization_id',
+            'churn_rate',
+            'retention_rate',
+        ]].to_csv(
+            f'{output_path}/{WEEKLY_RATE_OUTPUT_FILENAME}.csv',
+            index=False,
+            header=False
+        )
 
 
 class OrgMonthlyActiveTherapistRate(ActiveTherapistRate):
@@ -180,9 +179,9 @@ class OrgMonthlyActiveTherapistRate(ActiveTherapistRate):
         Calculate rate of the active therapists per Organization
         and writes the result into CSV file.
         """
-        logger.info("Load Organizations' monthly active therapists data from disk...")
+        logger.info("Load input of monthly active therapists per Organization from disk...")
 
-        # Step 1 - Load Organizations' monthly active therapists
+        # Step 1 - Load input of monthly active therapists
         path = f'{INPUT_RATE_PATH}/{ORG_RATE_DIR}/monthly'
 
         dataframe = pd.read_csv(
@@ -204,7 +203,9 @@ class OrgMonthlyActiveTherapistRate(ActiveTherapistRate):
                 'organization_id': 'Int64',
                 'active_ther': 'Int64',
                 'inactive_ther': 'Int64',
-                'total_ther': 'Int64'
+                'total_ther': 'Int64',
+                'active_ther_b_period': 'Int64',
+                'inactive_ther_b_period': 'Int64'
             },
             parse_dates=['period_start', 'period_end']
         )
@@ -223,9 +224,29 @@ class OrgMonthlyActiveTherapistRate(ActiveTherapistRate):
             axis=1
         )
 
+        logger.info("Save therapists' rates data into CSV file...")
+
         # Step 3 - Save results into CSV file
+        # * Create output directory if it doesn't exists
         output_path = f'{OUTPUT_RATE_PATH}/{ORG_RATE_DIR}/monthly'
-        self._to_csv(dataframe, output_path, MONTHLY_RATE_OUTPUT_FILENAME)
+
+        is_exists = os.path.exists(output_path)
+
+        if not is_exists:
+            os.makedirs(output_path)
+
+        # * Export dataframe to CSV file
+        dataframe[[
+            'period_start',
+            'period_end',
+            'organization_id',
+            'churn_rate',
+            'retention_rate',
+        ]].to_csv(
+            f'{output_path}/{MONTHLY_RATE_OUTPUT_FILENAME}.csv',
+            index=False,
+            header=False
+        )
 
 
 class OrgYearlyActiveTherapistRate(ActiveTherapistRate):
@@ -247,9 +268,9 @@ class OrgYearlyActiveTherapistRate(ActiveTherapistRate):
         Calculate rate of the active therapists per Organization
         and writes the result into CSV file.
         """
-        logger.info("Load Organizations' yearly active therapists data from disk...")
+        logger.info("Load input of yearly active therapists per Organization from disk...")
 
-        # Step 1 - Load Organizations' yearly active therapists
+        # Step 1 - Load input of yearly active therapists
         path = f'{INPUT_RATE_PATH}/{ORG_RATE_DIR}/yearly'
 
         dataframe = pd.read_csv(
@@ -271,7 +292,9 @@ class OrgYearlyActiveTherapistRate(ActiveTherapistRate):
                 'organization_id': 'Int64',
                 'active_ther': 'Int64',
                 'inactive_ther': 'Int64',
-                'total_ther': 'Int64'
+                'total_ther': 'Int64',
+                'active_ther_b_period': 'Int64',
+                'inactive_ther_b_period': 'Int64'
             },
             parse_dates=['period_start', 'period_end']
         )
@@ -290,9 +313,291 @@ class OrgYearlyActiveTherapistRate(ActiveTherapistRate):
             axis=1
         )
 
+        logger.info("Save therapists' rates data into CSV file...")
+
         # Step 3 - Save results into CSV file
+        # * Create output directory if it doesn't exists
         output_path = f'{OUTPUT_RATE_PATH}/{ORG_RATE_DIR}/yearly'
-        self._to_csv(dataframe, output_path, YEARLY_RATE_OUTPUT_FILENAME)
+
+        is_exists = os.path.exists(output_path)
+
+        if not is_exists:
+            os.makedirs(output_path)
+
+        # * Export dataframe to CSV file
+        dataframe[[
+            'period_start',
+            'period_end',
+            'organization_id',
+            'churn_rate',
+            'retention_rate',
+        ]].to_csv(
+            f'{output_path}/{YEARLY_RATE_OUTPUT_FILENAME}.csv',
+            index=False,
+            header=False
+        )
+
+
+class NDWeeklyActiveTherapistRate(ActiveTherapistRate):
+
+    def __init__(self) -> None:
+
+        # Runs data processor
+        process_start_at = datetime.now()
+
+        self._calculate()
+
+        process_end_at = datetime.now()
+
+        tag = "Calculating weekly rate of the active therapists per Organization"
+        print_time_duration(tag, process_start_at, process_end_at)
+
+    def _calculate(self) -> None:
+        """
+        Calculate rate of the active therapists per Organization
+        and writes the result into CSV file.
+        """
+        logger.info("Load input of weekly active therapists per Organization from disk...")
+
+        # Step 1 - Load input of weekly active therapists
+        path = f'{INPUT_RATE_PATH}/{APP_RATE_DIR}/weekly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{WEEKLY_RATE_INPUT_FILENAME}.csv',
+            sep=',',
+            names=[
+                'period_start',
+                'period_end',
+                'active_ther',
+                'inactive_ther',
+                'total_ther',
+                'active_ther_b_period',
+                'inactive_ther_b_period'
+            ],
+            dtype={
+                'period_start': 'str',
+                'period_end': 'str',
+                'active_ther': 'Int64',
+                'inactive_ther': 'Int64',
+                'total_ther': 'Int64',
+                'active_ther_b_period': 'Int64',
+                'inactive_ther_b_period': 'Int64'
+            },
+            parse_dates=['period_start', 'period_end']
+        )
+
+        logger.info("Calculating weekly rate of the active therapists per Organization...")
+
+        # Step 1 - Generate `churn_rate` column
+        dataframe['churn_rate'] = dataframe.apply(
+            lambda row: self._get_churn_rate(row['active_ther_b_period'], row['active_ther']),
+            axis=1
+        )
+
+        # Step 2 - Generate `retention_rate` column
+        dataframe['retention_rate'] = dataframe.apply(
+            lambda row: self._get_retention_rate(row['active_ther_b_period'], row['active_ther']),
+            axis=1
+        )
+
+        logger.info("Save therapists' rates data into CSV file...")
+
+        # Step 3 - Save results into CSV file
+        # * Create output directory if it doesn't exists
+        output_path = f'{OUTPUT_RATE_PATH}/{APP_RATE_DIR}/weekly'
+
+        is_exists = os.path.exists(output_path)
+
+        if not is_exists:
+            os.makedirs(output_path)
+
+        # * Export dataframe to CSV file
+        dataframe[[
+            'period_start',
+            'period_end',
+            'churn_rate',
+            'retention_rate',
+        ]].to_csv(
+            f'{output_path}/{WEEKLY_RATE_OUTPUT_FILENAME}.csv',
+            index=False,
+            header=False
+        )
+
+
+class NDMonthlyActiveTherapistRate(ActiveTherapistRate):
+
+    def __init__(self) -> None:
+
+        # Runs data processor
+        process_start_at = datetime.now()
+
+        self._calculate()
+
+        process_end_at = datetime.now()
+
+        tag = "Calculating monthly rate of the active therapists per Organization"
+        print_time_duration(tag, process_start_at, process_end_at)
+
+    def _calculate(self) -> None:
+        """
+        Calculate rate of the active therapists per Organization
+        and writes the result into CSV file.
+        """
+        logger.info("Load input of monthly active therapists per Organization from disk...")
+
+        # Step 1 - Load input of monthly active therapists
+        path = f'{INPUT_RATE_PATH}/{APP_RATE_DIR}/monthly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{MONTHLY_RATE_INPUT_FILENAME}.csv',
+            sep=',',
+            names=[
+                'period_start',
+                'period_end',
+                'organization_id',
+                'active_ther',
+                'inactive_ther',
+                'total_ther',
+                'active_ther_b_period',
+                'inactive_ther_b_period'
+            ],
+            dtype={
+                'period_start': 'str',
+                'period_end': 'str',
+                'organization_id': 'Int64',
+                'active_ther': 'Int64',
+                'inactive_ther': 'Int64',
+                'total_ther': 'Int64',
+                'active_ther_b_period': 'Int64',
+                'inactive_ther_b_period': 'Int64'
+            },
+            parse_dates=['period_start', 'period_end']
+        )
+
+        logger.info("Calculating monthly rate of the active therapists per Organization...")
+
+        # Step 1 - Generate `churn_rate` column
+        dataframe['churn_rate'] = dataframe.apply(
+            lambda row: self._get_churn_rate(row['active_ther_b_period'], row['active_ther']),
+            axis=1
+        )
+
+        # Step 2 - Generate `retention_rate` column
+        dataframe['retention_rate'] = dataframe.apply(
+            lambda row: self._get_retention_rate(row['active_ther_b_period'], row['active_ther']),
+            axis=1
+        )
+
+        logger.info("Save therapists' rates data into CSV file...")
+
+        # Step 3 - Save results into CSV file
+        # * Create output directory if it doesn't exists
+        output_path = f'{OUTPUT_RATE_PATH}/{APP_RATE_DIR}/monthly'
+
+        is_exists = os.path.exists(output_path)
+
+        if not is_exists:
+            os.makedirs(output_path)
+
+        # * Export dataframe to CSV file
+        dataframe[[
+            'period_start',
+            'period_end',
+            'churn_rate',
+            'retention_rate',
+        ]].to_csv(
+            f'{output_path}/{MONTHLY_RATE_OUTPUT_FILENAME}.csv',
+            index=False,
+            header=False
+        )
+
+
+class NDYearlyActiveTherapistRate(ActiveTherapistRate):
+
+    def __init__(self) -> None:
+
+        # Runs data processor
+        process_start_at = datetime.now()
+
+        self._calculate()
+
+        process_end_at = datetime.now()
+
+        tag = "Calculating yearly rate of the active therapists per Organization"
+        print_time_duration(tag, process_start_at, process_end_at)
+
+    def _calculate(self) -> None:
+        """
+        Calculate rate of the active therapists per Organization
+        and writes the result into CSV file.
+        """
+        logger.info("Load input of yearly active therapists per Organization from disk...")
+
+        # Step 1 - Load input of yearly active therapists
+        path = f'{INPUT_RATE_PATH}/{APP_RATE_DIR}/yearly'
+
+        dataframe = pd.read_csv(
+            f'{path}/{YEARLY_RATE_INPUT_FILENAME}.csv',
+            sep=',',
+            names=[
+                'period_start',
+                'period_end',
+                'organization_id',
+                'active_ther',
+                'inactive_ther',
+                'total_ther',
+                'active_ther_b_period',
+                'inactive_ther_b_period'
+            ],
+            dtype={
+                'period_start': 'str',
+                'period_end': 'str',
+                'organization_id': 'Int64',
+                'active_ther': 'Int64',
+                'inactive_ther': 'Int64',
+                'total_ther': 'Int64',
+                'active_ther_b_period': 'Int64',
+                'inactive_ther_b_period': 'Int64'
+            },
+            parse_dates=['period_start', 'period_end']
+        )
+
+        logger.info("Calculating monthly rate of the active therapists per Organization...")
+
+        # Step 1 - Generate `churn_rate` column
+        dataframe['churn_rate'] = dataframe.apply(
+            lambda row: self._get_churn_rate(row['active_ther_b_period'], row['active_ther']),
+            axis=1
+        )
+
+        # Step 2 - Generate `retention_rate` column
+        dataframe['retention_rate'] = dataframe.apply(
+            lambda row: self._get_retention_rate(row['active_ther_b_period'], row['active_ther']),
+            axis=1
+        )
+
+        logger.info("Save therapists' rates data into CSV file...")
+
+        # Step 3 - Save results into CSV file
+        # * Create output directory if it doesn't exists
+        output_path = f'{OUTPUT_RATE_PATH}/{APP_RATE_DIR}/yearly'
+
+        is_exists = os.path.exists(output_path)
+
+        if not is_exists:
+            os.makedirs(output_path)
+
+        # * Export dataframe to CSV file
+        dataframe[[
+            'period_start',
+            'period_end',
+            'churn_rate',
+            'retention_rate',
+        ]].to_csv(
+            f'{output_path}/{YEARLY_RATE_OUTPUT_FILENAME}.csv',
+            index=False,
+            header=False
+        )
 
 
 class TherapistRateProcessor:
@@ -306,6 +611,10 @@ class TherapistRateProcessor:
         OrgWeeklyActiveTherapistRate()
         OrgMonthlyActiveTherapistRate()
         OrgYearlyActiveTherapistRate()
+
+        NDWeeklyActiveTherapistRate()
+        NDMonthlyActiveTherapistRate()
+        NDYearlyActiveTherapistRate()
 
         process_end_at = datetime.now()
         print_time_duration("Therapists' rates data processing", process_start_at, process_end_at)
