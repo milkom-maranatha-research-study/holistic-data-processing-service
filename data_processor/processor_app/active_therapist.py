@@ -5,7 +5,14 @@ import os
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from pandas import DataFrame
+from typing import List
 
+from data_processor.settings import configure_logging
+from data_processor.src.dateutil import (
+    is_one_week_diff,
+    is_one_month_diff,
+    is_one_year_diff,
+)
 from data_processor.src.helpers import print_time_duration
 
 
@@ -30,39 +37,93 @@ YEARLY_INPUT_RATE_OUTPUT_FILENAME = 'input-rate-yearly'
 
 class OrgActiveTherProcessor:
 
-    def _calculate_num_of_thers_before_period(self, dataframe: DataFrame) -> DataFrame:
+    def set_total_thers_before_period(
+        self,
+        dataframe: DataFrame,
+        period_type: str
+    ) -> DataFrame:
         """
-        Calculate total active/inactive ther before period per Organization
-        and returns a copy of that `dataframe`.
+        Calculate total active/inactive therapists in the Organization
+        before particular period is started and returns a copy of that `dataframe`.
+        """
+        dataframes = self._split_dataframe_per_org(dataframe)
+
+        for df in dataframes:
+            self._set_value_before_period(df, period_type)
+        
+        # Merge all dataframes into a single dataframe
+        dataframe = pd.concat(dataframes).reset_index().drop(columns=['level_0', 'index'])
+
+        return dataframe
+
+    def _split_dataframe_per_org(self, dataframe: DataFrame) -> List[DataFrame]:
+        """
+        Splits that `dataframe` per organization ID.
         """
         organization_ids = dataframe['organization_id'].drop_duplicates().array
 
-        dfs = []
+        # We use `.copy()` to avoid `SettingWithCopyWarning`.
+        # The warning arises because we make a subset of the main dataframe,
+        # but then we modify it immediately.
+        # The subset of the main dataframe is created using shallow copy.
+        # Therefore the warning tells us that the action might affecting the main
+        # dataframe and some inconsistency is expected to occur.
+        dataframes = [
+            dataframe[dataframe['organization_id'] == org_id].copy(deep=True).reset_index()
+            for org_id in organization_ids    
+        ]
 
-        for org_id in organization_ids:
-            # We use `.copy()` to avoid `SettingWithCopyWarning`.
-            # The warning arises because we make a subset of the main dataframe,
-            # but then we modify it immediately.
-            # The subset of the main dataframe is created using shallow copy.
-            # Therefore the warning tells us that the action might affecting the main
-            # dataframe and some inconsistency is expected to occur.
-            org_df = dataframe[dataframe['organization_id'] == org_id].copy(deep=True)
+        return dataframes
 
-            org_df[[
-                'active_ther_b_period', 'inactive_ther_b_period'
-            ]] = org_df[['active_ther', 'inactive_ther']].shift(1).fillna(0)
+    def _set_value_before_period(self, dataframe: DataFrame, period_type:str) -> None:
+        """
+        Set the total active/inactive therapists before period started.
+        """
+        for index, row in dataframe.iterrows():
 
-            dfs.append(org_df)
+            if index == 0:
+                self._set_with_zero(index, dataframe)
+                continue
 
-        dataframe = pd.concat(dfs)
+            current_period_end = row['period_end']
+            prev_period_end = dataframe.loc[index - 1, ['period_end']]['period_end']
 
-        # Period start/end somehow is converted to milliseconds
-        # Therefore we need to convert them back to `datetime` object.
-        dataframe[['period_start', 'period_end']] = dataframe[
-            ['period_start', 'period_end']
-        ].apply(pd.to_datetime, errors='coerce')
+            if period_type == 'weekly':
+                if is_one_week_diff(prev_period_end, current_period_end):
+                    self._set_with_prev_row(index, dataframe)
+                    continue
 
-        return dataframe
+            elif period_type == 'monthly':
+                if is_one_month_diff(prev_period_end, current_period_end):
+                    self._set_with_prev_row(index, dataframe)
+                    continue
+
+            elif period_type == 'yearly':
+                if is_one_year_diff(prev_period_end, current_period_end):
+                    self._set_with_prev_row(index, dataframe)
+                    continue
+
+            self._set_with_zero(index, dataframe)
+
+    def _set_with_zero(self, index, dataframe) -> None:
+        """
+        Sets the total active/inactive therapists before period is started
+        on that current `index` of that `dataframe` to zero.
+        """
+        dataframe.loc[index, ['active_ther_b_period']] = [0]
+        dataframe.loc[index, ['inactive_ther_b_period']] = [0]
+
+    def _set_with_prev_row(self, index, dataframe) -> None:
+        """
+        Sets the total active/inactive therapists before period is started
+        on that current `index` of that `dataframe`
+        with the total active/inactive therapists on the previous period.
+        """
+        prev_active_ther = dataframe.loc[index - 1, ['active_ther']]['active_ther']
+        prev_inactive_ther = dataframe.loc[index - 1, ['inactive_ther']]['inactive_ther']
+
+        dataframe.loc[index, ['active_ther_b_period']] = [prev_active_ther]
+        dataframe.loc[index, ['inactive_ther_b_period']] = [prev_inactive_ther]
 
 
 class OrgWeeklyActiveTherProcessor(OrgActiveTherProcessor):
@@ -133,7 +194,7 @@ class OrgWeeklyActiveTherProcessor(OrgActiveTherProcessor):
         logger.info("Calculating active/inactive thers before period per Organization...")
 
         # Step 5 - Calculate active/inactive thers before period
-        dataframe = self._calculate_num_of_thers_before_period(dataframe)
+        dataframe = self.set_total_thers_before_period(dataframe, 'weekly')
 
         logger.info("Save active therapists per Organization into CSV file...")
 
@@ -225,7 +286,7 @@ class OrgMonthlyActiveTherProcessor(OrgActiveTherProcessor):
         logger.info("Calculating active/inactive thers before period per Organization...")
 
         # Step 5 - Calculate active/inactive thers before period
-        dataframe = self._calculate_num_of_thers_before_period(dataframe)
+        dataframe = self.set_total_thers_before_period(dataframe, 'monthly')
 
         logger.info("Save active therapists per Organization into CSV file...")
 
@@ -334,7 +395,7 @@ class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
         logger.info("Calculating active/inactive thers before period per Organization...")
 
         # Step 5 - Calculate active/inactive thers before period
-        dataframe = self._calculate_num_of_thers_before_period(dataframe)
+        dataframe = self.set_total_thers_before_period(dataframe, 'yearly')
 
         logger.info("Save active therapists per Organization into CSV file...")
 
@@ -382,7 +443,68 @@ class OrgYearlyActiveTherProcessor(OrgActiveTherProcessor):
         return dataframe
 
 
-class NDWeeklyActiveTherProcessor:
+class NDActiveTherProcessor:
+
+    def set_total_thers_before_period(
+        self,
+        dataframe: DataFrame,
+        period_type: str
+    ) -> DataFrame:
+        """
+        Calculate total active/inactive therapists in NiceDay before particular period
+        is started and returns a copy of that `dataframe`.
+        """
+
+        for index, row in dataframe.iterrows():
+
+            if index == 0:
+                self._set_with_zero(index, dataframe)
+                continue
+
+            current_period_end = row['period_end']
+            prev_period_end = dataframe.loc[index - 1, ['period_end']]['period_end']
+
+            if period_type == 'weekly':
+                if is_one_week_diff(prev_period_end, current_period_end):
+                    self._set_with_prev_row(index, dataframe)
+                    continue
+
+            elif period_type == 'monthly':
+                if is_one_month_diff(prev_period_end, current_period_end):
+                    self._set_with_prev_row(index, dataframe)
+                    continue
+
+            elif period_type == 'yearly':
+                if is_one_year_diff(prev_period_end, current_period_end):
+                    self._set_with_prev_row(index, dataframe)
+                    continue
+
+            self._set_with_zero(index, dataframe)
+
+        return dataframe
+
+    def _set_with_zero(self, index, dataframe) -> None:
+        """
+        Sets the total active/inactive therapists before period is started
+        on that current `index` of that `dataframe` to zero.
+        """
+        dataframe.loc[index, ['active_ther_b_period']] = [0]
+        dataframe.loc[index, ['inactive_ther_b_period']] = [0]
+
+    def _set_with_prev_row(self, index, dataframe) -> None:
+        """
+        Sets the total active/inactive therapists before period is started
+        on that current `index` of that `dataframe`
+        with the total active/inactive therapists on the previous period.
+        """
+        prev_active_ther = dataframe.loc[index - 1, ['active_ther']]['active_ther']
+        prev_inactive_ther = dataframe.loc[index - 1, ['inactive_ther']]['inactive_ther']
+
+        dataframe.loc[index, ['active_ther_b_period']] = [prev_active_ther]
+        dataframe.loc[index, ['inactive_ther_b_period']] = [prev_inactive_ther]
+
+
+class NDWeeklyActiveTherProcessor(NDActiveTherProcessor):
 
     def __init__(self) -> None:
 
@@ -448,9 +570,7 @@ class NDWeeklyActiveTherProcessor:
         logger.info("Calculating active/inactive thers before period per Organization...")
 
         # Step 5 - Calculate active/inactive thers before period
-        dataframe[[
-            'active_ther_b_period', 'inactive_ther_b_period'
-        ]] = dataframe[['active_ther', 'inactive_ther']].shift(1).fillna(0)
+        dataframe = self.set_total_thers_before_period(dataframe, 'weekly')
 
         logger.info("Save active therapists data in NiceDay into CSV file...")
 
@@ -479,7 +599,7 @@ class NDWeeklyActiveTherProcessor:
         )
 
 
-class NDMonthlyActiveTherProcessor:
+class NDMonthlyActiveTherProcessor(NDActiveTherProcessor):
 
     def __init__(self) -> None:
 
@@ -539,9 +659,7 @@ class NDMonthlyActiveTherProcessor:
         logger.info("Calculating active/inactive thers before period per Organization...")
 
         # Step 5 - Calculate active/inactive thers before period
-        dataframe[[
-            'active_ther_b_period', 'inactive_ther_b_period'
-        ]] = dataframe[['active_ther', 'inactive_ther']].shift(1).fillna(0)
+        dataframe = self.set_total_thers_before_period(dataframe, 'monthly')
 
         logger.info("Save active therapists data in NiceDay into CSV file...")
 
@@ -588,7 +706,7 @@ class NDMonthlyActiveTherProcessor:
         return dataframe
 
 
-class NDYearlyActiveTherProcessor:
+class NDYearlyActiveTherProcessor(NDActiveTherProcessor):
 
     def __init__(self) -> None:
 
@@ -647,9 +765,7 @@ class NDYearlyActiveTherProcessor:
         logger.info("Calculating active/inactive thers before period per Organization...")
 
         # Step 5 - Calculate active/inactive thers before period
-        dataframe[[
-            'active_ther_b_period', 'inactive_ther_b_period'
-        ]] = dataframe[['active_ther', 'inactive_ther']].shift(1).fillna(0)
+        dataframe = self.set_total_thers_before_period(dataframe, 'yearly')
 
         logger.info("Save active therapists data in NiceDay into CSV file...")
 
@@ -715,3 +831,9 @@ class ActiveTherapistProcessor:
 
         tag = "Processing active therapists"
         print_time_duration(tag, process_start_at, process_end_at)
+
+
+if __name__ == '__main__':
+    configure_logging()
+
+    ActiveTherapistProcessor()
