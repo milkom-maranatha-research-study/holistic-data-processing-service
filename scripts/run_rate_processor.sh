@@ -13,4 +13,4 @@ if [[ $TYPE =~ ^(locally)$ ]]; then
     export PYTHONPATH="${PYTHONPATH}:${PWD}"
 fi
 
-python "$PWD/data_processor/processor_app/rate.py"
+python "$PWD/data_processing/processor_app/rate.py"

@@ -164,7 +164,7 @@ data_aggregator/.settings
 data_aggregator/build
 data_aggregator/data_aggregator_app/.settings
 data_aggregator/data_aggregator_app/build
-# data_processor
+# data_processing
 input/
 output/
 .env.sync_back

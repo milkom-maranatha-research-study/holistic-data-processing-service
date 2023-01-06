@@ -4,9 +4,9 @@ import os
 from dask import dataframe as dask_dataframe
 from datetime import datetime
 
-from data_processor.src.clients.operations import TherapistBackendOperation
-from data_processor.src.helpers import print_time_duration
-from data_processor.settings import configure_logging
+from data_processing.src.clients.operations import TherapistBackendOperation
+from data_processing.src.helpers import print_time_duration
+from data_processing.settings import configure_logging
 
 
 logger = logging.getLogger(__name__)

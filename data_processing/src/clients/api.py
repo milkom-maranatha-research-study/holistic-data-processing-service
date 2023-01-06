@@ -4,8 +4,8 @@ from os.path import exists
 from requests.exceptions import HTTPError
 from typing import Dict, List, Union
 
-from data_processor import settings
-from data_processor.src.tracers import endpoint_tracer, response_tracer
+from data_processing import settings
+from data_processing.src.tracers import endpoint_tracer, response_tracer
 
 
 class BackendAPIClient:
@@ -199,6 +199,23 @@ class InteractionAPI(BackendAPIClient):
 
 class TotalTherapistAPI(BackendAPIClient):
 
+    def __init__(self):
+        super().__init__()
+
+        self._BE_TOTAL_THERAPISTS_FILE = '.be_total_therapists.csv.tmp'
+
+    def download_data(self, format='csv') -> None:
+        """
+        Downloads Total Therapist data from Backend in CSV format.
+        """
+        if format not in ['json', 'csv']:
+            raise ValueError(f'{format} is invalid format.')
+
+        path = '/total-therapists/export/'
+        payload = {'format': format}
+
+        self._download(self._BE_TOTAL_THERAPISTS_FILE, path=path, payload=payload)
+
     def upsert(self, total_therapists: List[Dict]) -> Dict:
         """
         Create or update total therapists in NiceDay.
@@ -225,6 +242,23 @@ class TotalTherapistAPI(BackendAPIClient):
 
 
 class TherapistRateAPI(BackendAPIClient):
+
+    def __init__(self):
+        super().__init__()
+
+        self._BE_THERAPISTS_RATES_FILE = '.be_therapists_rates.csv.tmp'
+
+    def download_data(self, format='csv') -> None:
+        """
+        Downloads Therapists' rates data from Backend in CSV format.
+        """
+        if format not in ['json', 'csv']:
+            raise ValueError(f'{format} is invalid format.')
+
+        path = '/rates/export/'
+        payload = {'format': format}
+
+        self._download(self._BE_THERAPISTS_RATES_FILE, path=path, payload=payload)
 
     def upsert(self, rates: List[Dict]) -> Dict:
         """

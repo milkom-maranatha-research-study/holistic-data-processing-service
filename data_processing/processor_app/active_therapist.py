@@ -7,13 +7,13 @@ from dateutil.relativedelta import relativedelta
 from pandas import DataFrame
 from typing import List
 
-from data_processor.settings import configure_logging
-from data_processor.src.dateutil import (
+from data_processing.settings import configure_logging
+from data_processing.src.dateutil import (
     is_one_week_diff,
     is_one_month_diff,
     is_one_year_diff,
 )
-from data_processor.src.helpers import print_time_duration
+from data_processing.src.helpers import print_time_duration
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class OrgActiveTherProcessor:
 
         for df in dataframes:
             self._set_value_before_period(df, period_type)
-        
+
         # Merge all dataframes into a single dataframe
         dataframe = pd.concat(dataframes).reset_index().drop(columns=['level_0', 'index'])
 
@@ -70,12 +70,12 @@ class OrgActiveTherProcessor:
         # dataframe and some inconsistency is expected to occur.
         dataframes = [
             dataframe[dataframe['organization_id'] == org_id].copy(deep=True).reset_index()
-            for org_id in organization_ids    
+            for org_id in organization_ids
         ]
 
         return dataframes
 
-    def _set_value_before_period(self, dataframe: DataFrame, period_type:str) -> None:
+    def _set_value_before_period(self, dataframe: DataFrame, period_type: str) -> None:
         """
         Set the total active/inactive therapists before period started.
         """

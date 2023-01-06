@@ -4,15 +4,15 @@ import pandas as pd
 from dask import dataframe as dask_dataframe
 from typing import Dict, List
 
-from data_processor import settings
+from data_processing import settings
 
-from data_processor.src.clients.api import (
+from data_processing.src.clients.api import (
     InteractionAPI,
     TotalTherapistAPI,
     TherapistAPI,
     TherapistRateAPI
 )
-from data_processor.src.clients.mappers import (
+from data_processing.src.clients.mappers import (
     TotalTherapistMapper,
     TherapistRateMapper,
 )
