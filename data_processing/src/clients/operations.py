@@ -277,13 +277,13 @@ class TherapistRateBackendOperation:
 
     def upsert(self, total_therapists: List[Dict]) -> None:
         """
-        Create or update total therapists in NiceDay.
+        Create or update therapists' rates in NiceDay.
         """
         self.api.upsert(total_therapists)
 
     def upsert_by_org(self, org_id: int, total_therapists: List[Dict]) -> None:
         """
-        Create or update total therapists in the Organization ID.
+        Create or update therapists' rates in the Organization ID.
         """
         self.api.upsert_by_org(org_id, total_therapists)
 
