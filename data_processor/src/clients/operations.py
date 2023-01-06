@@ -7,14 +7,12 @@ from typing import Dict, List
 from data_processor import settings
 
 from data_processor.src.clients.api import (
-    TotalAllTherapistAPI,
     InteractionAPI,
     TotalTherapistAPI,
     TherapistAPI,
     TherapistRateAPI
 )
 from data_processor.src.clients.mappers import (
-    TotalAllTherapistMapper,
     TotalTherapistMapper,
     TherapistRateMapper,
 )
@@ -141,6 +139,7 @@ class TotalTherapistBackendOperation:
         self._sync_back_org_monthly_data()
         self._sync_back_org_yearly_data()
 
+        self._sync_back_nd_alltime_data()
         self._sync_back_nd_weekly_data()
         self._sync_back_nd_monthly_data()
         self._sync_back_nd_yearly_data()
@@ -177,6 +176,15 @@ class TotalTherapistBackendOperation:
 
         for org_id, num_of_thers in total_thers_map.items():
             self.api.upsert_by_org(org_id, num_of_thers)
+
+    def _sync_back_nd_alltime_data(self) -> None:
+        """
+        Synchronize the total all therapists in NiceDay
+        back to the Backend service.
+        """
+
+        total_thers = self._get_nd_alltime_therapists()
+        self.api.upsert(total_thers)
 
     def _sync_back_nd_weekly_data(self) -> None:
         """
@@ -259,6 +267,24 @@ class TotalTherapistBackendOperation:
         logger.info("Converting yearly total therapist objects into a dictionary...")
         return self.mapper.to_org_total_thers_map(dataframe, 'yearly')
 
+    def _get_nd_alltime_therapists(self) -> List[Dict]:
+        """
+        Returns a list of the total all therapists.
+        """
+
+        logger.info("Importing total all therapists from disk...")
+
+        path = f'{OUTPUT_ACTIVE_THER_PATH}/alltime'
+
+        dataframe = pd.read_csv(
+            f'{path}/{ALLTIME_ACTIVE_THER_FILENAME}.csv',
+            sep='\t',
+            header=None
+        )
+
+        logger.info("Converting total all therapist's objects into a list...")
+        return self.mapper.to_nd_total_thers(dataframe, 'alltime')
+
     def _get_nd_weekly_therapists(self) -> Dict:
         """
         Returns a list of weekly total therapists in NiceDay.
@@ -312,42 +338,6 @@ class TotalTherapistBackendOperation:
 
         logger.info("Converting yearly total therapist objects into a dictionary...")
         return self.mapper.to_nd_total_thers(dataframe, 'yearly')
-
-
-class TotalAllTherapistBackendOperation:
-
-    def __init__(self) -> None:
-        self.api = TotalAllTherapistAPI()
-        self.mapper = TotalAllTherapistMapper()
-
-    def sync_back(self) -> None:
-        """
-        Synchronize the total all therapists in NiceDay
-        back to the Backend service.
-        """
-
-        num_of_thers = self._get_all_time_therapists()
-
-        for num_of_ther in num_of_thers:
-            self.api.upsert(num_of_ther)
-
-    def _get_all_time_therapists(self) -> List[Dict]:
-        """
-        Returns a list of the total all therapists.
-        """
-
-        logger.info("Importing total all therapists from disk...")
-
-        path = f'{OUTPUT_ACTIVE_THER_PATH}/alltime'
-
-        dataframe = pd.read_csv(
-            f'{path}/{ALLTIME_ACTIVE_THER_FILENAME}.csv',
-            sep='\t',
-            header=None
-        )
-
-        logger.info("Converting total all therapist's objects into a list...")
-        return self.mapper.to_total_thers_map(dataframe)
 
 
 class TherapistRateBackendOperation:

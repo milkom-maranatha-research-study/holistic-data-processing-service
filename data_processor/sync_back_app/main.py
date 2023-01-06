@@ -3,7 +3,6 @@ import logging
 from datetime import datetime
 
 from data_processor.src.clients.operations import (
-    TotalAllTherapistBackendOperation,
     TotalTherapistBackendOperation,
     TherapistRateBackendOperation,
 )
@@ -17,15 +16,12 @@ logger = logging.getLogger(__name__)
 class SyncBack:
 
     def __init__(self) -> None:
-
-        self.total_all_ther_operation = TotalAllTherapistBackendOperation()
         self.total_ther_operation = TotalTherapistBackendOperation()
         self.therapist_rate_operation = TherapistRateBackendOperation()
 
         # Runs sync back operation
         process_start_at = datetime.now()
 
-        self.total_all_ther_operation.sync_back()
         self.total_ther_operation.sync_back()
         self.therapist_rate_operation.sync_back()
 

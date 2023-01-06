@@ -6,49 +6,6 @@ from pandas import DataFrame, Series
 from typing import Dict, List
 
 
-class TotalAllTherapistMapper:
-
-    def to_total_thers_map(self, dataframe: DataFrame) -> Dict:
-        """
-        Converts that given `dataframe` into the all-time total therapists.
-
-        Dataframe's row is defined by:
-        ```
-        [{period},{total_active_thers},{total_inactive_thers},{total_thers}]
-        """
-        num_of_ther_lists = [
-            self._get_total_thers(row)
-            for _, row in dataframe.iterrows()
-        ]
-
-        return list(chain.from_iterable(num_of_ther_lists))
-
-    def _get_total_thers(self, row: Series) -> List[Dict]:
-        """
-        Converts that given `row` into a list of the total therapists dictionary.
-
-        Dataframe's row is defined by:
-        ```
-        [{period},{total_active_thers},{total_inactive_thers},{total_thers}]
-        """
-        period_start, period_end = row[0].split('/')
-
-        return [
-            {
-                'start_date': period_start,
-                'end_date': period_end,
-                'is_active': True,
-                'value': int(row[1])
-            },
-            {
-                'start_date': period_start,
-                'end_date': period_end,
-                'is_active': False,
-                'value': int(row[2])
-            }
-        ]
-
-
 class TotalTherapistMapper:
 
     def to_nd_total_thers(self, dataframe: DataFrame, period_type: str) -> List[Dict]:
@@ -211,7 +168,11 @@ class TotalTherapistMapper:
         """
         Converts that given `row` into a list of the total therapists dictionary.
         """
-        if period_type == 'weekly':
+
+        if period_type == 'alltime':
+            return self._get_nd_alltime_total_thers(row)
+
+        elif period_type == 'weekly':
             return self._get_nd_weekly_total_thers(row)
 
         elif period_type == 'monthly':
@@ -221,6 +182,33 @@ class TotalTherapistMapper:
             return self._get_nd_yearly_total_thers(row)
 
         return []
+
+    def _get_nd_alltime_total_thers(self, row: Series) -> List[Dict]:
+        """
+        Converts that given `row` into a list of the total therapists dictionary.
+
+        Dataframe's row is defined by:
+        ```
+        [{period},{total_active_thers},{total_inactive_thers},{total_thers}]
+        """
+        period_start, period_end = row[0].split('/')
+
+        return [
+            {
+                'period_type': 'alltime',
+                'start_date': period_start,
+                'end_date': period_end,
+                'is_active': True,
+                'value': int(row[1])
+            },
+            {
+                'period_type': 'alltime',
+                'start_date': period_start,
+                'end_date': period_end,
+                'is_active': False,
+                'value': int(row[2])
+            }
+        ]
 
     def _get_nd_weekly_total_thers(self, row: Series) -> List[Dict]:
         """

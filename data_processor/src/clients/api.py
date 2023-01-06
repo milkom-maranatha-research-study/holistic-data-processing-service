@@ -224,21 +224,6 @@ class TotalTherapistAPI(BackendAPIClient):
         return response.json()
 
 
-class TotalAllTherapistAPI(BackendAPIClient):
-
-    def upsert(self, num_of_therapist: Dict) -> Dict:
-        """
-        Create or update total all therapists.
-        """
-
-        method = 'POST'
-        path = '/total-therapists/all/'
-
-        response = self._api_request(method, path, num_of_therapist)
-
-        return response.json()
-
-
 class TherapistRateAPI(BackendAPIClient):
 
     def upsert(self, rates: List[Dict]) -> Dict:
