@@ -58,7 +58,7 @@ class TherapistBackendOperation:
 
     def collect_data(self) -> None:
         """
-        Download and validates data from Backend if the Developer Mode is off.
+        Download data from Backend if the Developer Mode is off.
 
         Otherwise, we load the temporary CSV file from disk.
         """
@@ -99,7 +99,7 @@ class InteractionBackendOperation:
 
     def collect_data(self) -> None:
         """
-        Download and validates data from Backend if the Developer Mode is off.
+        Download data from Backend if the Developer Mode is off.
 
         Otherwise, we load the temporary CSV file from disk.
         """
@@ -394,3 +394,91 @@ class TherapistRateBackendOperation:
 
         logger.info("Converting yearly therapist's objects into a dictionary...")
         return self.mapper.to_nd_rates(dataframe, 'yearly')
+
+
+class TotalTherapistVisualizationOperation:
+
+    def __init__(self) -> None:
+        self.api = TotalTherapistAPI()
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """
+        Returns the Interaction dask's dataframe.
+        """
+
+        assert hasattr(self, '_df'), (
+            'Dask dataframe is not available!\n'
+            'You must call `.collect_data()` first.'
+        )
+
+        return self._df
+
+    def collect_data(self) -> None:
+        """
+        Download data from Backend if the Developer Mode is off.
+
+        Otherwise, we load the temporary CSV file from disk.
+        """
+
+        logger.info("Collecting Interaction data from Backend or importing from disk...")
+
+        if not settings.DEV_MODE:
+            self.api.download_data(format='csv')
+
+        self._df = pd.read_csv(
+            self.api._BE_TOTAL_THERAPISTS_FILE,
+            dtype={
+                'organization_id': 'Int64',
+                'type': str,
+                'period_type': str,
+                'start_date': str,
+                'end_date': str,
+                'value': 'Int64',
+            },
+            parse_dates=['start_date', 'end_date']
+        )
+
+
+class TherapistRateVisualizationOperation:
+
+    def __init__(self) -> None:
+        self.api = TherapistRateAPI()
+
+    @property
+    def data(self) -> pd.DataFrame:
+        """
+        Returns the Interaction dask's dataframe.
+        """
+
+        assert hasattr(self, '_df'), (
+            'Dask dataframe is not available!\n'
+            'You must call `.collect_data()` first.'
+        )
+
+        return self._df
+
+    def collect_data(self) -> None:
+        """
+        Download data from Backend if the Developer Mode is off.
+
+        Otherwise, we load the temporary CSV file from disk.
+        """
+
+        logger.info("Collecting Interaction data from Backend or importing from disk...")
+
+        if not settings.DEV_MODE:
+            self.api.download_data(format='csv')
+
+        self._df = pd.read_csv(
+            self.api._BE_THERAPISTS_RATES_FILE,
+            dtype={
+                'organization_id': 'Int64',
+                'type': str,
+                'period_type': str,
+                'start_date': str,
+                'end_date': str,
+                'rate_value': 'Float64',
+            },
+            parse_dates=['start_date', 'end_date']
+        )
