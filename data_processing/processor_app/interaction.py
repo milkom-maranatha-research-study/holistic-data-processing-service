@@ -95,7 +95,7 @@ class InteractionDataProcessor:
         # * This is required by the aggregator service, so it can calculate
         # * the number of active/inactive therapists in one go.
         logger.info("Merge the interaction dataframe with the all-time therapist dataframe...")
-        num_of_thers_dataframe = dask_dataframe.read_csv(
+        total_thers_dataframe = dask_dataframe.read_csv(
             f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_FILENAME}.csv',
             sep='\t',
             names=['all_time_period', 'all_time_thers'],
@@ -105,7 +105,7 @@ class InteractionDataProcessor:
             }
         )
 
-        head = num_of_thers_dataframe.head()
+        head = total_thers_dataframe.head()
         dataframe = dataframe.assign(
             all_time_period=lambda _: head.iloc[0][0],
             all_time_thers=lambda _: head.iloc[0][1],
@@ -212,13 +212,13 @@ class InteractionFileExport:
         Create input files per Organization from that `dataframe` with CSV format
         for that speficic `period_type`.
         """
-        # Additional Step - Merge interaction dataframe with the therapist per org dataframe
+        # Additional Step - Merge Interaction with the Total Therapist per Org dataframes
         # * This is required by the aggregator service, so it can calculate
         # * the number of active/inactive therapists per org in one go.
 
         logger.info("Merge interaction dataframe with the therapist per org dataframe...")
 
-        num_thers_per_org_dataframe = dask_dataframe.read_csv(
+        total_thers_per_org_dataframe = dask_dataframe.read_csv(
             f'{AGG_NUM_OF_THERS_PATH}/{AGG_NUM_OF_THERS_PER_ORG_FILENAME}.csv',
             sep='\t',
             names=['period', 'organization_id', 'total_thers_in_org'],
@@ -230,7 +230,7 @@ class InteractionFileExport:
         )[['organization_id', 'total_thers_in_org']]
 
         dataframe = dataframe.merge(
-            num_thers_per_org_dataframe,
+            total_thers_per_org_dataframe,
             how='left',
             on='organization_id'
         )
