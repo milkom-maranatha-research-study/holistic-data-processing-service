@@ -478,7 +478,7 @@ class TherapistRateVisualizationOperation:
                 'period_type': str,
                 'start_date': str,
                 'end_date': str,
-                'rate_value': 'Float64',
+                'value': 'Float64',
             },
             parse_dates=['start_date', 'end_date']
         )

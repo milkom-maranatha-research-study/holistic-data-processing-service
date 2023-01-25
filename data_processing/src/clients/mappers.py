@@ -330,14 +330,14 @@ class TherapistRateMapper:
                     'start_date': f'{row[0]}',
                     'end_date': f'{row[1]}',
                     'type': 'churn_rate',
-                    'rate_value': float(row[2])
+                    'value': float(row[2])
                 },
                 {
                     'period_type': period_type,
                     'start_date': f'{row[0]}',
                     'end_date': f'{row[1]}',
                     'type': 'retention_rate',
-                    'rate_value': float(row[3])
+                    'value': float(row[3])
                 }
             ]
 
@@ -387,13 +387,13 @@ class TherapistRateMapper:
                 'start_date': f'{row[0]}',
                 'end_date': f'{row[1]}',
                 'type': 'churn_rate',
-                'rate_value': float(row[3])
+                'value': float(row[3])
             },
             {
                 'period_type': period_type,
                 'start_date': f'{row[0]}',
                 'end_date': f'{row[1]}',
                 'type': 'retention_rate',
-                'rate_value': float(row[4])
+                'value': float(row[4])
             }
         ]
