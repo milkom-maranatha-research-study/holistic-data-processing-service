@@ -392,7 +392,7 @@ class TherapistRateBackendOperation:
             header=None
         )
 
-        logger.info("Converting yearly therapist's objects into a dictionary...")
+        logger.info("Converting yearly therapist's rate objects into a dictionary...")
         return self.mapper.to_nd_rates(dataframe, 'yearly')
 
 
