@@ -168,3 +168,5 @@ data_aggregator/data_aggregator_app/build
 input/
 output/
 .env.sync_back
+# data_visualization
+*.png
