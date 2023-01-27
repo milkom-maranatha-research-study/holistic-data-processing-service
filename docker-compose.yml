@@ -66,6 +66,19 @@ services:
     command:
       - ./scripts/run_sync_back.sh
 
+  data_visualization:
+    build: .
+    volumes:
+      - .:/data-processing-service
+    tty: true
+    container_name: sync_back
+    env_file:
+      - .env
+    networks:
+      - holistic-net
+    command:
+      - ./scripts/run_visualization.sh
+
 networks:
   # Use the network bridge so that our containers can talk to each other.
   # @see https://levelup.gitconnected.com/how-to-access-a-docker-container-from-another-container-656398c93576

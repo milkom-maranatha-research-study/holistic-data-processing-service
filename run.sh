@@ -6,4 +6,5 @@ docker-compose up interaction_processor && \
 ./scripts/run_aggregator.sh active_ther && \
 docker-compose up active_ther_processor && \
 docker-compose up rate_processor && \
-docker-compose up sync_back
+docker-compose up sync_back && \
+docker-compose up data_visualization
