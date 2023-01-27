@@ -71,10 +71,11 @@ class DataVisualization:
 class TotalTherapistDataVisualization(DataVisualization):
 
     def __init__(self) -> None:
-        self.operation = TotalTherapistVisualizationOperation()
-
         # Runs data visualization
         process_start_at = datetime.now()
+
+        operation = TotalTherapistVisualizationOperation()
+        operation.collect_data()
 
         base_path = path.abspath(path.dirname(path.dirname(__name__)))
         dataframe = pd.read_csv(
@@ -172,10 +173,12 @@ class TotalTherapistDataVisualization(DataVisualization):
 class TherapistRateDataVisualization(DataVisualization):
 
     def __init__(self) -> None:
-        self.operation = TherapistRateVisualizationOperation()
 
         # Runs data visualization
         process_start_at = datetime.now()
+
+        operation = TherapistRateVisualizationOperation()
+        operation.collect_data()
     
         base_path = path.abspath(path.dirname(path.dirname(__name__)))
         dataframe = pd.read_csv(
