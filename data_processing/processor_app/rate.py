@@ -451,7 +451,6 @@ class NDMonthlyActiveTherapistRate(ActiveTherapistRate):
             names=[
                 'period_start',
                 'period_end',
-                'organization_id',
                 'active_ther',
                 'inactive_ther',
                 'total_ther',
@@ -461,7 +460,6 @@ class NDMonthlyActiveTherapistRate(ActiveTherapistRate):
             dtype={
                 'period_start': 'str',
                 'period_end': 'str',
-                'organization_id': 'Int64',
                 'active_ther': 'Int64',
                 'inactive_ther': 'Int64',
                 'total_ther': 'Int64',
@@ -539,7 +537,6 @@ class NDYearlyActiveTherapistRate(ActiveTherapistRate):
             names=[
                 'period_start',
                 'period_end',
-                'organization_id',
                 'active_ther',
                 'inactive_ther',
                 'total_ther',
@@ -549,7 +546,6 @@ class NDYearlyActiveTherapistRate(ActiveTherapistRate):
             dtype={
                 'period_start': 'str',
                 'period_end': 'str',
-                'organization_id': 'Int64',
                 'active_ther': 'Int64',
                 'inactive_ther': 'Int64',
                 'total_ther': 'Int64',
